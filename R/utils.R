@@ -1,6 +1,11 @@
 # ==============================================================================
 # Utility Functions
 # ==============================================================================
+#
+# This file contains utility functions for the vaschooldata package.
+# Data is sourced from the Virginia Department of Education (VDOE).
+#
+# ==============================================================================
 
 #' Pipe operator
 #'
@@ -21,15 +26,28 @@ NULL
 #' Get available years of Virginia enrollment data
 #'
 #' Returns a vector of years for which enrollment data is available
-#' through the Urban Institute's Education Data Portal.
+#' from the Virginia Department of Education (VDOE).
 #'
-#' @return Integer vector of available years (1987-2023)
+#' VDOE provides Fall Membership enrollment data through the School Quality
+#' Profiles website. Historical data is available from approximately 2016
+#' to the present.
+#'
+#' Note: VDOE typically releases Fall Membership data in late fall/early winter
+#' following the school year start. For example, 2024-25 (end_year=2025) data
+#' is usually available by December 2024.
+#'
+#' @return Integer vector of available years (2016-2025)
 #' @export
 #' @examples
 #' get_available_years()
+#'
+#' # Check the current range
+#' range(get_available_years())
 get_available_years <- function() {
-  # CCD data available 1986-2023, but Virginia data starts 1987
-  1987L:2023L
+  # VDOE School Quality Profiles data available from 2016
+  # Years reflect end of school year (2024 = 2023-24 school year)
+  # Maximum year updated when new data is released
+  2016L:2025L
 }
 
 
@@ -56,174 +74,180 @@ safe_numeric <- function(x) {
   x <- gsub(",", "", x)
   x <- trimws(x)
 
-  # Handle common suppression markers
-  x[x %in% c("*", ".", "-", "-1", "-2", "-9", "<5", "N/A", "NA", "", "PS")] <- NA_character_
+  # Handle common suppression markers used by VDOE
+  x[x %in% c("*", ".", "-", "-1", "-2", "-9", "<5", "<10", "N/A", "NA", "", "PS", "S", "s", "DS")] <- NA_character_
 
   suppressWarnings(as.numeric(x))
 }
 
 
-#' Build API URL for Urban Institute Education Data Portal
+#' Format school year string
 #'
-#' Constructs the URL for querying the Education Data Portal API.
+#' Converts an end year to a school year string.
 #'
-#' @param level Data level ("schools" or "school-districts")
-#' @param source Data source ("ccd")
-#' @param topic Data topic ("enrollment" or "directory")
-#' @param year School year end (e.g., 2023 for 2022-23)
-#' @param filters List of filter parameters
-#' @param by Optional disaggregation (e.g., "race", "sex", "grade")
-#' @return Character string URL
+#' @param end_year School year end (e.g., 2024)
+#' @return Character string in format "2023-24"
 #' @keywords internal
-build_api_url <- function(level, source, topic, year = NULL, filters = NULL, by = NULL) {
-
-  base_url <- "https://educationdata.urban.org/api/v1"
-
-  # Build path components
-  path_parts <- c(level, source, topic)
-
-  if (!is.null(year)) {
-    path_parts <- c(path_parts, year)
-  }
-
-  if (!is.null(by)) {
-    path_parts <- c(path_parts, by)
-  }
-
-  url <- paste(c(base_url, path_parts), collapse = "/")
-
-  # Add query parameters
-  if (!is.null(filters) && length(filters) > 0) {
-    query_parts <- sapply(names(filters), function(name) {
-      paste0(name, "=", filters[[name]])
-    })
-    url <- paste0(url, "/?", paste(query_parts, collapse = "&"))
-  }
-
-  url
+format_school_year <- function(end_year) {
+  paste0(end_year - 1, "-", substr(end_year, 3, 4))
 }
 
 
-#' Make API request with pagination handling
+#' Format long school year string
 #'
-#' Fetches all pages of results from the Education Data Portal API.
+#' Converts an end year to a full school year string.
 #'
-#' @param url Base URL for the API request
-#' @param timeout Request timeout in seconds
-#' @return Data frame with all results
+#' @param end_year School year end (e.g., 2024)
+#' @return Character string in format "2023-2024"
 #' @keywords internal
-fetch_api_data <- function(url, timeout = 300) {
-
-  all_results <- list()
-  page <- 1
-  has_more <- TRUE
-
-  while (has_more) {
-    # Add page parameter
-    page_url <- if (grepl("\\?", url)) {
-      paste0(url, "&page=", page)
-    } else {
-      paste0(url, "?page=", page)
-    }
-
-    message(paste("  Fetching page", page, "..."))
-
-    response <- tryCatch({
-      httr::GET(
-        page_url,
-        httr::timeout(timeout),
-        httr::add_headers(Accept = "application/json")
-      )
-    }, error = function(e) {
-      stop(paste("Network error:", e$message))
-    })
-
-    if (httr::http_error(response)) {
-      stop(paste("API error:", httr::status_code(response),
-                 httr::content(response, "text", encoding = "UTF-8")))
-    }
-
-    content <- httr::content(response, "text", encoding = "UTF-8")
-    parsed <- jsonlite::fromJSON(content, flatten = TRUE)
-
-    # Check if we have results
-    if (is.null(parsed$results) || length(parsed$results) == 0) {
-      has_more <- FALSE
-    } else {
-      all_results[[page]] <- parsed$results
-
-      # Check for next page
-      has_more <- !is.null(parsed$`next`) && parsed$`next` != ""
-      page <- page + 1
-
-      # Safety limit
-      if (page > 100) {
-        warning("Reached page limit (100). Some data may be missing.")
-        has_more <- FALSE
-      }
-    }
-  }
-
-  if (length(all_results) == 0) {
-    return(data.frame())
-  }
-
-  dplyr::bind_rows(all_results)
+format_school_year_long <- function(end_year) {
+  paste0(end_year - 1, "-", end_year)
 }
 
 
-#' Map race codes to standard names
+#' Validate year parameter
 #'
-#' Converts Urban Institute race codes to standardized names.
+#' Checks if the provided year is within the valid range.
 #'
-#' @param race_code Integer race code from API
-#' @return Character race name
+#' @param end_year School year end to validate
+#' @param min_year Minimum valid year (default from get_available_years())
+#' @param max_year Maximum valid year (default from get_available_years())
+#' @return NULL (throws error if invalid)
 #' @keywords internal
-map_race_code <- function(race_code) {
+validate_year <- function(end_year, min_year = NULL, max_year = NULL) {
+  if (is.null(min_year) || is.null(max_year)) {
+    available <- get_available_years()
+    min_year <- min(available)
+    max_year <- max(available)
+  }
+
+  if (!is.numeric(end_year) || length(end_year) != 1) {
+    stop("end_year must be a single numeric value")
+  }
+
+  if (end_year < min_year || end_year > max_year) {
+    stop(paste0(
+      "end_year must be between ", min_year, " and ", max_year,
+      ". Got: ", end_year,
+      "\nUse get_available_years() to see all available years."
+    ))
+  }
+
+  invisible(NULL)
+}
+
+
+#' Map VDOE race/ethnicity codes to standard names
+#'
+#' Converts VDOE race/ethnicity categories to standardized names.
+#'
+#' @param race_name Character race/ethnicity from VDOE data
+#' @return Character standardized race name
+#' @keywords internal
+map_vdoe_race <- function(race_name) {
+  # VDOE uses various race category names
   race_map <- c(
-    "1" = "white",
-    "2" = "black",
-    "3" = "hispanic",
-    "4" = "asian",
-    "5" = "native_american",
-    "6" = "pacific_islander",
-    "7" = "multiracial",
-    "8" = "unknown",
-    "9" = "total",
-    "20" = "other",
-    "99" = "total"
+    # Standard names
+    "White" = "white",
+    "Black" = "black",
+    "Black or African American" = "black",
+    "Hispanic" = "hispanic",
+    "Hispanic or Latino" = "hispanic",
+    "Asian" = "asian",
+    "American Indian" = "native_american",
+    "American Indian or Alaska Native" = "native_american",
+    "Native Hawaiian" = "pacific_islander",
+    "Native Hawaiian or Other Pacific Islander" = "pacific_islander",
+    "Two or More Races" = "multiracial",
+    "Two or more races" = "multiracial",
+    "Multiracial" = "multiracial",
+    # Common abbreviations
+    "WH" = "white",
+    "BL" = "black",
+    "HI" = "hispanic",
+    "AS" = "asian",
+    "AM" = "native_american",
+    "PI" = "pacific_islander",
+    "HP" = "pacific_islander",
+    "TR" = "multiracial",
+    "MR" = "multiracial"
   )
 
-  as.character(race_code) %>%
-    sapply(function(x) {
-      if (x %in% names(race_map)) race_map[x] else "unknown"
-    })
+  result <- sapply(race_name, function(x) {
+    if (x %in% names(race_map)) {
+      race_map[x]
+    } else {
+      tolower(gsub(" ", "_", x))
+    }
+  })
+
+  as.character(result)
 }
 
 
 #' Map grade codes to standard format
 #'
-#' Converts Urban Institute grade codes to standardized format.
+#' Converts VDOE grade codes to standardized format.
 #'
-#' @param grade_code Integer or character grade code from API
+#' @param grade_code Character or numeric grade code
 #' @return Character grade in standard format (PK, K, 01-12)
 #' @keywords internal
 map_grade_code <- function(grade_code) {
   grade_map <- c(
-    "-1" = "PK",
-    "-2" = "PK",  # Pre-K special
-    "0" = "K",
+    # Standard abbreviations
+    "PK" = "PK",
+    "KG" = "K",
+    "K" = "K",
+    # Numeric grades
     "1" = "01", "2" = "02", "3" = "03", "4" = "04",
     "5" = "05", "6" = "06", "7" = "07", "8" = "08",
     "9" = "09", "10" = "10", "11" = "11", "12" = "12",
-    "13" = "UG",  # Ungraded
-    "14" = "AE",  # Adult education
-    "15" = "UG",  # Ungraded secondary
-    "99" = "TOTAL"
+    # Zero-padded
+    "01" = "01", "02" = "02", "03" = "03", "04" = "04",
+    "05" = "05", "06" = "06", "07" = "07", "08" = "08",
+    "09" = "09",
+    # Special grades
+    "PG" = "PG",  # Post-Graduate
+    "UG" = "UG",  # Ungraded
+    "UE" = "UE",  # Ungraded Elementary
+    "US" = "US",  # Ungraded Secondary
+    "TOTAL" = "TOTAL"
   )
 
   as.character(grade_code) %>%
     sapply(function(x) {
       if (x %in% names(grade_map)) grade_map[x] else x
     })
+}
+
+
+#' Get Virginia school division codes
+#'
+#' Returns a named vector of Virginia school division codes and names.
+#' Virginia has 132 school divisions (called "divisions" not "districts").
+#'
+#' @return Named character vector with division codes as names
+#' @keywords internal
+get_division_codes <- function() {
+  # This is a subset of major divisions - full list maintained by VDOE
+  # Division codes are typically 3 digits
+  c(
+    "001" = "Accomack County",
+    "002" = "Albemarle County",
+    "003" = "Alexandria City",
+    "004" = "Alleghany County",
+    "005" = "Amelia County",
+    "006" = "Amherst County",
+    "007" = "Appomattox County",
+    "008" = "Arlington County",
+    "009" = "Augusta County",
+    "010" = "Bath County",
+    # ... additional divisions
+    "090" = "Fairfax County",
+    "091" = "Falls Church City",
+    "107" = "Loudoun County",
+    "126" = "Prince William County",
+    "131" = "Virginia Beach City"
+    # Full list available from VDOE
+  )
 }

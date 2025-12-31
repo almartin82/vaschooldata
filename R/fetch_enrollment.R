@@ -5,40 +5,40 @@
 # This file contains the main user-facing functions for downloading enrollment
 # data from Virginia.
 #
-# Data is sourced from the Urban Institute's Education Data Portal API, which
-# provides NCES Common Core of Data (CCD) enrollment figures.
+# Data is sourced directly from the Virginia Department of Education (VDOE)
+# via the School Quality Profiles website and Fall Membership reports.
 #
 # ==============================================================================
 
 #' Fetch Virginia enrollment data
 #'
-#' Downloads and processes enrollment data from Virginia via the Urban
-#' Institute's Education Data Portal. Data is sourced from the NCES Common
-#' Core of Data (CCD).
+#' Downloads and processes enrollment data from the Virginia Department of
+#' Education (VDOE). Data is sourced from VDOE's School Quality Profiles
+#' and Fall Membership reports.
 #'
-#' @param end_year A school year. Year is the end of the academic year - eg 2022-23
-#'   school year is year '2023'. Valid values are 1987-2023.
+#' @param end_year A school year. Year is the end of the academic year - eg 2023-24
+#'   school year is year '2024'. Valid values are 2016-2025.
 #' @param tidy If TRUE (default), returns data in long (tidy) format with subgroup
 #'   column. If FALSE, returns wide format.
 #' @param use_cache If TRUE (default), uses locally cached data when available.
-#'   Set to FALSE to force re-download from API.
+#'   Set to FALSE to force re-download from VDOE.
 #' @return Data frame with enrollment data. Wide format includes columns for
 #'   district_id, campus_id, names, and enrollment counts by demographic/grade.
 #'   Tidy format pivots these counts into subgroup and grade_level columns.
 #' @export
 #' @examples
 #' \dontrun{
-#' # Get 2023 enrollment data (2022-23 school year)
-#' enr_2023 <- fetch_enr(2023)
+#' # Get 2024 enrollment data (2023-24 school year)
+#' enr_2024 <- fetch_enr(2024)
 #'
 #' # Get wide format
-#' enr_wide <- fetch_enr(2023, tidy = FALSE)
+#' enr_wide <- fetch_enr(2024, tidy = FALSE)
 #'
 #' # Force fresh download (ignore cache)
-#' enr_fresh <- fetch_enr(2023, use_cache = FALSE)
+#' enr_fresh <- fetch_enr(2024, use_cache = FALSE)
 #'
 #' # Filter to specific division
-#' fairfax <- enr_2023 %>%
+#' fairfax <- enr_2024 %>%
 #'   dplyr::filter(district_name == "FAIRFAX COUNTY PUBLIC SCHOOLS")
 #' }
 fetch_enr <- function(end_year, tidy = TRUE, use_cache = TRUE) {
@@ -62,7 +62,7 @@ fetch_enr <- function(end_year, tidy = TRUE, use_cache = TRUE) {
     return(read_cache(end_year, cache_type))
   }
 
-  # Get raw data from API
+  # Get raw data from VDOE
   raw <- get_raw_enr(end_year)
 
   # Process to standard schema
@@ -127,4 +127,48 @@ fetch_enr_multi <- function(end_years, tidy = TRUE, use_cache = TRUE) {
 
   # Combine
   dplyr::bind_rows(results)
+}
+
+
+#' Fetch enrollment using local file
+#'
+#' Processes a locally downloaded Fall Membership file from VDOE.
+#' Use this function when automatic downloads fail due to CAPTCHA
+#' or other restrictions.
+#'
+#' @param file_path Path to the downloaded Excel or CSV file
+#' @param end_year School year end (e.g., 2024 for 2023-24)
+#' @param tidy If TRUE (default), returns data in long (tidy) format.
+#' @param use_cache If TRUE (default), caches the processed data.
+#' @return Data frame with enrollment data
+#' @export
+#' @examples
+#' \dontrun{
+#' # Download Fall Membership file manually from:
+#' # https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics
+#'
+#' # Then process it:
+#' enr_2024 <- fetch_enr_local("path/to/fall_membership_2024.xlsx", 2024)
+#' }
+fetch_enr_local <- function(file_path, end_year, tidy = TRUE, use_cache = TRUE) {
+
+  # Import local file
+  raw <- import_local_fm(file_path, end_year)
+
+  # Process to standard schema
+  processed <- process_enr(raw, end_year)
+
+  # Optionally tidy
+  if (tidy) {
+    processed <- tidy_enr(processed) %>%
+      id_enr_aggs()
+  }
+
+  # Cache the result
+  if (use_cache) {
+    cache_type <- if (tidy) "tidy" else "wide"
+    write_cache(processed, end_year, cache_type)
+  }
+
+  processed
 }

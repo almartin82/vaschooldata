@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # This file contains functions for processing raw enrollment data from the
-# Urban Institute API into a clean, standardized format.
+# Virginia Department of Education (VDOE) into a clean, standardized format.
 #
 # The standard schema matches other state schooldata packages for consistency.
 #
@@ -11,7 +11,7 @@
 
 #' Process raw enrollment data
 #'
-#' Transforms raw API data into a standardized schema combining school
+#' Transforms raw VDOE data into a standardized schema combining school
 #' and division data.
 #'
 #' @param raw_data List containing school and division data from get_raw_enr
@@ -21,10 +21,10 @@
 process_enr <- function(raw_data, end_year) {
 
   # Process school data
-  school_processed <- process_school_enr(raw_data$school, raw_data$school_dir, end_year)
+  school_processed <- process_school_enr(raw_data$school, end_year)
 
-  # Process division (district) data
-  division_processed <- process_division_enr(raw_data$division, raw_data$division_dir, end_year)
+  # Process division data
+  division_processed <- process_division_enr(raw_data$division, end_year)
 
   # Create state aggregate from division data
   state_processed <- create_state_aggregate(division_processed, end_year)
@@ -58,94 +58,86 @@ process_enr <- function(raw_data, end_year) {
 
 #' Process school-level enrollment data
 #'
-#' @param school_data List with race, grade, and sex data frames
-#' @param school_dir Data frame with school directory information
+#' @param school_data Data frame with school enrollment from VDOE
 #' @param end_year School year end
 #' @return Processed school data frame
 #' @keywords internal
-process_school_enr <- function(school_data, school_dir, end_year) {
+process_school_enr <- function(school_data, end_year) {
 
   # Check if we have any data
-  if (is.null(school_data$race) || nrow(school_data$race) == 0) {
-    return(data.frame())
+  if (is.null(school_data) || nrow(school_data) == 0) {
+    return(create_empty_school_df(end_year))
   }
 
-  # Process race data to get demographics
-  race_wide <- pivot_race_data(school_data$race, "ncessch")
+  # Standardize column names to lowercase
+  names(school_data) <- tolower(names(school_data))
 
-  # Process grade data
-  grade_wide <- pivot_grade_data(school_data$grade, "ncessch")
+  # Identify key columns based on common VDOE naming patterns
+  # School ID column
+  id_cols <- c("school_num", "school_number", "sch_num", "schoolid", "school_id", "ncessch")
+  id_col <- id_cols[id_cols %in% names(school_data)]
 
-  # Process sex data
-  sex_wide <- pivot_sex_data(school_data$sex, "ncessch")
+  # Division ID column
+  div_cols <- c("division_num", "div_num", "division_number", "divisionid", "division_id", "leaid")
+  div_col <- div_cols[div_cols %in% names(school_data)]
 
-  # Merge all data
-  result <- race_wide
+  # School name column
+  name_cols <- c("school_name", "schoolname", "sch_name", "school")
+  name_col <- name_cols[name_cols %in% names(school_data)]
 
-  if (nrow(grade_wide) > 0) {
-    result <- dplyr::left_join(result, grade_wide, by = "ncessch")
-  }
+  # Division name column
+  div_name_cols <- c("division_name", "divisionname", "div_name", "division")
+  div_name_col <- div_name_cols[div_name_cols %in% names(school_data)]
 
-  if (nrow(sex_wide) > 0) {
-    result <- dplyr::left_join(result, sex_wide, by = "ncessch")
-  }
+  # Start building result
 
-  # Add directory information (names, charter status, etc.)
-  if (!is.null(school_dir) && nrow(school_dir) > 0) {
-    dir_cols <- c("ncessch", "leaid", "school_name", "county_name", "charter")
-    dir_cols <- dir_cols[dir_cols %in% names(school_dir)]
+  result <- school_data
 
-    if (length(dir_cols) > 0) {
-      school_dir_subset <- school_dir[, dir_cols, drop = FALSE]
-      result <- dplyr::left_join(result, school_dir_subset, by = "ncessch")
-    }
-  }
+  # Add standard columns
+  result$end_year <- end_year
+  result$type <- "Campus"
 
-  # Standardize column names
-  result <- result %>%
-    dplyr::mutate(
-      end_year = end_year,
-      type = "Campus",
-      campus_id = as.character(ncessch),
-      district_id = if ("leaid" %in% names(.)) as.character(leaid) else substr(as.character(ncessch), 1, 7),
-      campus_name = if ("school_name" %in% names(.)) school_name else NA_character_,
-      county = if ("county_name" %in% names(.)) county_name else NA_character_,
-      charter_flag = if ("charter" %in% names(.)) {
-        dplyr::case_when(
-          charter == 1 ~ "Y",
-          charter == 2 ~ "N",
-          TRUE ~ NA_character_
-        )
-      } else NA_character_
-    )
-
-  # Calculate row_total from race totals or max of grade totals
-  if ("total" %in% names(result)) {
-    result$row_total <- result$total
+  # Map ID columns
+  if (length(id_col) > 0) {
+    result$campus_id <- as.character(result[[id_col[1]]])
   } else {
-    # Sum grade columns
-    grade_cols <- grep("^grade_", names(result), value = TRUE)
-    if (length(grade_cols) > 0) {
-      result$row_total <- rowSums(result[, grade_cols, drop = FALSE], na.rm = TRUE)
+    result$campus_id <- NA_character_
+  }
+
+  if (length(div_col) > 0) {
+    result$district_id <- as.character(result[[div_col[1]]])
+  } else {
+    result$district_id <- NA_character_
+  }
+
+  # Map name columns
+  if (length(name_col) > 0) {
+    result$campus_name <- as.character(result[[name_col[1]]])
+  } else {
+    result$campus_name <- NA_character_
+  }
+
+  if (length(div_name_col) > 0) {
+    result$district_name <- as.character(result[[div_name_col[1]]])
+  } else {
+    result$district_name <- NA_character_
+  }
+
+  # Extract enrollment columns
+  result <- extract_enrollment_columns(result)
+
+  # Calculate row_total if not present
+  if (!"row_total" %in% names(result) || all(is.na(result$row_total))) {
+    demo_cols <- c("white", "black", "hispanic", "asian",
+                   "native_american", "pacific_islander", "multiracial")
+    demo_cols <- demo_cols[demo_cols %in% names(result)]
+    if (length(demo_cols) > 0) {
+      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
     }
   }
 
-  # Add district name from directory if available
-  result$district_name <- NA_character_
-
-  # Select and rename to standard schema
-  result <- result %>%
-    dplyr::select(
-      end_year, type,
-      district_id, campus_id,
-      district_name, campus_name,
-      county, charter_flag,
-      row_total,
-      dplyr::any_of(c("white", "black", "hispanic", "asian",
-                      "native_american", "pacific_islander", "multiracial")),
-      dplyr::any_of(c("male", "female")),
-      dplyr::starts_with("grade_")
-    )
+  # Select standard columns
+  result <- select_standard_columns(result)
 
   result
 }
@@ -153,203 +145,173 @@ process_school_enr <- function(school_data, school_dir, end_year) {
 
 #' Process division-level enrollment data
 #'
-#' @param division_data List with race, grade, and sex data frames
-#' @param division_dir Data frame with division directory information
+#' @param division_data Data frame with division enrollment from VDOE
 #' @param end_year School year end
 #' @return Processed division data frame
 #' @keywords internal
-process_division_enr <- function(division_data, division_dir, end_year) {
+process_division_enr <- function(division_data, end_year) {
 
   # Check if we have any data
-  if (is.null(division_data$race) || nrow(division_data$race) == 0) {
-    return(data.frame())
+  if (is.null(division_data) || nrow(division_data) == 0) {
+    return(create_empty_division_df(end_year))
   }
 
-  # Process race data to get demographics
-  race_wide <- pivot_race_data(division_data$race, "leaid")
+  # Standardize column names to lowercase
+  names(division_data) <- tolower(names(division_data))
 
-  # Process grade data
-  grade_wide <- pivot_grade_data(division_data$grade, "leaid")
+  # Identify key columns
+  # Division ID column
+  div_cols <- c("division_num", "div_num", "division_number", "divisionid", "division_id", "leaid")
+  div_col <- div_cols[div_cols %in% names(division_data)]
 
-  # Process sex data
-  sex_wide <- pivot_sex_data(division_data$sex, "leaid")
+  # Division name column
+  div_name_cols <- c("division_name", "divisionname", "div_name", "division")
+  div_name_col <- div_name_cols[div_name_cols %in% names(division_data)]
 
-  # Merge all data
-  result <- race_wide
+  # Start building result
+  result <- division_data
 
-  if (nrow(grade_wide) > 0) {
-    result <- dplyr::left_join(result, grade_wide, by = "leaid")
-  }
+  # Add standard columns
+  result$end_year <- end_year
+  result$type <- "District"
+  result$campus_id <- NA_character_
+  result$campus_name <- NA_character_
 
-  if (nrow(sex_wide) > 0) {
-    result <- dplyr::left_join(result, sex_wide, by = "leaid")
-  }
-
-  # Add directory information
-  if (!is.null(division_dir) && nrow(division_dir) > 0) {
-    dir_cols <- c("leaid", "lea_name", "county_name")
-    dir_cols <- dir_cols[dir_cols %in% names(division_dir)]
-
-    if (length(dir_cols) > 0) {
-      division_dir_subset <- division_dir[, dir_cols, drop = FALSE]
-      result <- dplyr::left_join(result, division_dir_subset, by = "leaid")
-    }
-  }
-
-  # Standardize column names
-  result <- result %>%
-    dplyr::mutate(
-      end_year = end_year,
-      type = "District",
-      district_id = as.character(leaid),
-      campus_id = NA_character_,
-      district_name = if ("lea_name" %in% names(.)) lea_name else NA_character_,
-      campus_name = NA_character_,
-      county = if ("county_name" %in% names(.)) county_name else NA_character_,
-      charter_flag = NA_character_
-    )
-
-  # Calculate row_total
-  if ("total" %in% names(result)) {
-    result$row_total <- result$total
+  # Map ID columns
+  if (length(div_col) > 0) {
+    result$district_id <- as.character(result[[div_col[1]]])
   } else {
-    grade_cols <- grep("^grade_", names(result), value = TRUE)
-    if (length(grade_cols) > 0) {
-      result$row_total <- rowSums(result[, grade_cols, drop = FALSE], na.rm = TRUE)
+    result$district_id <- NA_character_
+  }
+
+  # Map name columns
+  if (length(div_name_col) > 0) {
+    result$district_name <- as.character(result[[div_name_col[1]]])
+  } else {
+    result$district_name <- NA_character_
+  }
+
+  # Extract enrollment columns
+  result <- extract_enrollment_columns(result)
+
+  # Calculate row_total if not present
+  if (!"row_total" %in% names(result) || all(is.na(result$row_total))) {
+    demo_cols <- c("white", "black", "hispanic", "asian",
+                   "native_american", "pacific_islander", "multiracial")
+    demo_cols <- demo_cols[demo_cols %in% names(result)]
+    if (length(demo_cols) > 0) {
+      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
     }
   }
 
-  # Select and rename to standard schema
-  result <- result %>%
-    dplyr::select(
-      end_year, type,
-      district_id, campus_id,
-      district_name, campus_name,
-      county, charter_flag,
-      row_total,
-      dplyr::any_of(c("white", "black", "hispanic", "asian",
-                      "native_american", "pacific_islander", "multiracial")),
-      dplyr::any_of(c("male", "female")),
-      dplyr::starts_with("grade_")
-    )
+  # Select standard columns
+  result <- select_standard_columns(result)
 
   result
 }
 
 
-#' Pivot race data from long to wide format
+#' Extract enrollment columns from raw data
 #'
-#' @param race_df Data frame with race enrollment data
-#' @param id_col Name of the ID column ("ncessch" or "leaid")
-#' @return Wide data frame with race columns
+#' Maps VDOE column names to standard enrollment column names.
+#'
+#' @param df Data frame with raw VDOE data
+#' @return Data frame with standardized enrollment columns
 #' @keywords internal
-pivot_race_data <- function(race_df, id_col) {
+extract_enrollment_columns <- function(df) {
 
-  if (is.null(race_df) || nrow(race_df) == 0) {
-    return(data.frame())
+  # Column mapping from VDOE names to standard names
+  col_mapping <- list(
+    # Total enrollment
+    row_total = c("total", "total_enrollment", "enrollment", "count", "membership"),
+
+    # Race/ethnicity columns
+    white = c("white", "wh", "white_count", "race_white"),
+    black = c("black", "bl", "black_count", "african_american", "race_black"),
+    hispanic = c("hispanic", "hi", "hispanic_count", "latino", "race_hispanic"),
+    asian = c("asian", "as", "asian_count", "race_asian"),
+    native_american = c("american_indian", "am", "native_american",
+                        "american_indian_count", "race_american_indian"),
+    pacific_islander = c("pacific_islander", "pi", "hp", "native_hawaiian",
+                         "native_hawaiian_count", "race_pacific_islander"),
+    multiracial = c("multiracial", "two_or_more", "mr", "tr",
+                    "two_or_more_count", "race_two_or_more"),
+
+    # Gender columns
+    male = c("male", "m", "male_count"),
+    female = c("female", "f", "female_count"),
+
+    # Grade columns
+    grade_pk = c("pk", "prek", "pre_k", "grade_pk", "prekindergarten"),
+    grade_k = c("k", "kg", "kindergarten", "grade_k", "grade_kg"),
+    grade_01 = c("g01", "grade_1", "grade_01", "gr1"),
+    grade_02 = c("g02", "grade_2", "grade_02", "gr2"),
+    grade_03 = c("g03", "grade_3", "grade_03", "gr3"),
+    grade_04 = c("g04", "grade_4", "grade_04", "gr4"),
+    grade_05 = c("g05", "grade_5", "grade_05", "gr5"),
+    grade_06 = c("g06", "grade_6", "grade_06", "gr6"),
+    grade_07 = c("g07", "grade_7", "grade_07", "gr7"),
+    grade_08 = c("g08", "grade_8", "grade_08", "gr8"),
+    grade_09 = c("g09", "grade_9", "grade_09", "gr9"),
+    grade_10 = c("g10", "grade_10", "gr10"),
+    grade_11 = c("g11", "grade_11", "gr11"),
+    grade_12 = c("g12", "grade_12", "gr12"),
+
+    # County
+    county = c("county", "county_name", "locality"),
+
+    # Charter flag
+    charter_flag = c("charter", "charter_school", "is_charter")
+  )
+
+  # Apply mapping
+  for (std_name in names(col_mapping)) {
+    possible_names <- col_mapping[[std_name]]
+    found_col <- possible_names[possible_names %in% names(df)]
+
+    if (length(found_col) > 0 && !(std_name %in% names(df))) {
+      df[[std_name]] <- safe_numeric(df[[found_col[1]]])
+    } else if (std_name %in% names(df)) {
+      df[[std_name]] <- safe_numeric(df[[std_name]])
+    }
   }
 
-  # Map race codes to names
-  race_df$race_name <- map_race_code(race_df$race)
-
-  # Filter to relevant race categories
-  race_df <- race_df %>%
-    dplyr::filter(race_name %in% c("white", "black", "hispanic", "asian",
-                                    "native_american", "pacific_islander",
-                                    "multiracial", "total"))
-
-  # Pivot to wide format
-  result <- race_df %>%
-    dplyr::select(dplyr::all_of(id_col), race_name, enrollment) %>%
-    tidyr::pivot_wider(
-      id_cols = dplyr::all_of(id_col),
-      names_from = race_name,
-      values_from = enrollment,
-      values_fn = sum
-    )
-
-  result
+  df
 }
 
 
-#' Pivot grade data from long to wide format
+#' Select standard columns for output
 #'
-#' @param grade_df Data frame with grade enrollment data
-#' @param id_col Name of the ID column
-#' @return Wide data frame with grade columns
+#' @param df Data frame with processed data
+#' @return Data frame with only standard columns
 #' @keywords internal
-pivot_grade_data <- function(grade_df, id_col) {
+select_standard_columns <- function(df) {
 
-  if (is.null(grade_df) || nrow(grade_df) == 0) {
-    return(data.frame())
+  # Standard column order
+  std_cols <- c(
+    "end_year", "type",
+    "district_id", "campus_id",
+    "district_name", "campus_name",
+    "county", "charter_flag",
+    "row_total",
+    "white", "black", "hispanic", "asian",
+    "native_american", "pacific_islander", "multiracial",
+    "male", "female",
+    "grade_pk", "grade_k",
+    "grade_01", "grade_02", "grade_03", "grade_04",
+    "grade_05", "grade_06", "grade_07", "grade_08",
+    "grade_09", "grade_10", "grade_11", "grade_12"
+  )
+
+  # Add missing columns as NA
+  for (col in std_cols) {
+    if (!(col %in% names(df))) {
+      df[[col]] <- NA
+    }
   }
 
-  # Map grade codes to standard format
-  grade_df$grade_name <- map_grade_code(grade_df$grade)
-
-  # Filter to standard grades
-  valid_grades <- c("PK", "K", "01", "02", "03", "04", "05", "06",
-                    "07", "08", "09", "10", "11", "12", "UG")
-
-  grade_df <- grade_df %>%
-    dplyr::filter(grade_name %in% valid_grades) %>%
-    dplyr::mutate(
-      grade_col = dplyr::case_when(
-        grade_name == "PK" ~ "grade_pk",
-        grade_name == "K" ~ "grade_k",
-        grade_name == "UG" ~ "grade_ug",
-        TRUE ~ paste0("grade_", grade_name)
-      )
-    )
-
-  # Pivot to wide format
-  result <- grade_df %>%
-    dplyr::select(dplyr::all_of(id_col), grade_col, enrollment) %>%
-    tidyr::pivot_wider(
-      id_cols = dplyr::all_of(id_col),
-      names_from = grade_col,
-      values_from = enrollment,
-      values_fn = sum
-    )
-
-  result
-}
-
-
-#' Pivot sex data from long to wide format
-#'
-#' @param sex_df Data frame with sex enrollment data
-#' @param id_col Name of the ID column
-#' @return Wide data frame with male/female columns
-#' @keywords internal
-pivot_sex_data <- function(sex_df, id_col) {
-
-  if (is.null(sex_df) || nrow(sex_df) == 0) {
-    return(data.frame())
-  }
-
-  # Map sex codes: 1 = Male, 2 = Female, 9 = Total/Unknown
-  sex_df <- sex_df %>%
-    dplyr::mutate(
-      sex_name = dplyr::case_when(
-        sex == 1 ~ "male",
-        sex == 2 ~ "female",
-        TRUE ~ NA_character_
-      )
-    ) %>%
-    dplyr::filter(!is.na(sex_name))
-
-  # Pivot to wide format
-  result <- sex_df %>%
-    dplyr::select(dplyr::all_of(id_col), sex_name, enrollment) %>%
-    tidyr::pivot_wider(
-      id_cols = dplyr::all_of(id_col),
-      names_from = sex_name,
-      values_from = enrollment,
-      values_fn = sum
-    )
-
-  result
+  # Select only standard columns
+  df[, std_cols, drop = FALSE]
 }
 
 
@@ -361,8 +323,8 @@ pivot_sex_data <- function(sex_df, id_col) {
 #' @keywords internal
 create_state_aggregate <- function(division_df, end_year) {
 
-  if (nrow(division_df) == 0) {
-    return(data.frame())
+  if (is.null(division_df) || nrow(division_df) == 0) {
+    return(create_empty_state_df(end_year))
   }
 
   # Columns to sum
@@ -374,8 +336,7 @@ create_state_aggregate <- function(division_df, end_year) {
     "grade_pk", "grade_k",
     "grade_01", "grade_02", "grade_03", "grade_04",
     "grade_05", "grade_06", "grade_07", "grade_08",
-    "grade_09", "grade_10", "grade_11", "grade_12",
-    "grade_ug"
+    "grade_09", "grade_10", "grade_11", "grade_12"
   )
 
   # Filter to columns that exist
@@ -396,8 +357,98 @@ create_state_aggregate <- function(division_df, end_year) {
 
   # Sum each column
   for (col in sum_cols) {
-    state_row[[col]] <- sum(division_df[[col]], na.rm = TRUE)
+    state_row[[col]] <- sum(as.numeric(division_df[[col]]), na.rm = TRUE)
   }
 
   state_row
+}
+
+
+#' Create empty school data frame
+#'
+#' @param end_year School year end
+#' @return Empty data frame with expected columns
+#' @keywords internal
+create_empty_school_df <- function(end_year) {
+  data.frame(
+    end_year = integer(),
+    type = character(),
+    district_id = character(),
+    campus_id = character(),
+    district_name = character(),
+    campus_name = character(),
+    county = character(),
+    charter_flag = character(),
+    row_total = numeric(),
+    white = numeric(),
+    black = numeric(),
+    hispanic = numeric(),
+    asian = numeric(),
+    native_american = numeric(),
+    pacific_islander = numeric(),
+    multiracial = numeric(),
+    male = numeric(),
+    female = numeric(),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+#' Create empty division data frame
+#'
+#' @param end_year School year end
+#' @return Empty data frame with expected columns
+#' @keywords internal
+create_empty_division_df <- function(end_year) {
+  data.frame(
+    end_year = integer(),
+    type = character(),
+    district_id = character(),
+    campus_id = character(),
+    district_name = character(),
+    campus_name = character(),
+    county = character(),
+    charter_flag = character(),
+    row_total = numeric(),
+    white = numeric(),
+    black = numeric(),
+    hispanic = numeric(),
+    asian = numeric(),
+    native_american = numeric(),
+    pacific_islander = numeric(),
+    multiracial = numeric(),
+    male = numeric(),
+    female = numeric(),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+#' Create empty state data frame
+#'
+#' @param end_year School year end
+#' @return Empty data frame with expected columns
+#' @keywords internal
+create_empty_state_df <- function(end_year) {
+  data.frame(
+    end_year = end_year,
+    type = "State",
+    district_id = NA_character_,
+    campus_id = NA_character_,
+    district_name = NA_character_,
+    campus_name = NA_character_,
+    county = NA_character_,
+    charter_flag = NA_character_,
+    row_total = NA_real_,
+    white = NA_real_,
+    black = NA_real_,
+    hispanic = NA_real_,
+    asian = NA_real_,
+    native_american = NA_real_,
+    pacific_islander = NA_real_,
+    multiracial = NA_real_,
+    male = NA_real_,
+    female = NA_real_,
+    stringsAsFactors = FALSE
+  )
 }

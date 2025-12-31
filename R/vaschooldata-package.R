@@ -2,8 +2,8 @@
 #'
 #' Downloads and processes school enrollment data from the Virginia Department
 #' of Education (VDOE). Provides functions for fetching Fall Membership
-#' enrollment data via the Urban Institute's Education Data Portal API and
-#' transforming it into tidy format for analysis.
+#' enrollment data directly from VDOE and transforming it into tidy format
+#' for analysis.
 #'
 #' @section Main functions:
 #' \describe{
@@ -31,12 +31,12 @@
 #' Virginia has 132 school divisions (equivalent to districts in other states).
 #'
 #' @section Data Sources:
-#' Data is sourced from:
+#' Data is sourced exclusively from:
 #' \itemize{
-#'   \item Urban Institute Education Data Portal: \url{https://educationdata.urban.org/}
-#'   \item Original source: NCES Common Core of Data (CCD)
 #'   \item VDOE Fall Membership: \url{https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics}
 #' }
+#'
+#' Note: This package does NOT use federal data sources (NCES, Urban Institute, etc.).
 #'
 #' @section Data Availability:
 #' \itemize{
