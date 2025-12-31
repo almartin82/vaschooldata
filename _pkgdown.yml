@@ -1,0 +1,34 @@
+url: https://almartin82.github.io/vaschooldata/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [search, github]
+
+reference:
+  - title: Main Functions
+    desc: Core functions for fetching and processing enrollment data
+    contents:
+      - fetch_enr
+      - fetch_enr_multi
+      - get_available_years
+
+  - title: Data Transformation
+    desc: Functions for transforming and aggregating data
+    contents:
+      - tidy_enr
+      - id_enr_aggs
+      - enr_grade_aggs
+
+  - title: Cache Management
+    desc: Functions for managing locally cached data
+    contents:
+      - cache_status
+      - clear_cache
+
+  - title: Package
+    contents:
+      - vaschooldata-package

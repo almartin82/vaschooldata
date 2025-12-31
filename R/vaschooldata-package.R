@@ -1,0 +1,75 @@
+#' vaschooldata: Fetch and Process Virginia School Data
+#'
+#' Downloads and processes school enrollment data from the Virginia Department
+#' of Education (VDOE). Provides functions for fetching Fall Membership
+#' enrollment data via the Urban Institute's Education Data Portal API and
+#' transforming it into tidy format for analysis.
+#'
+#' @section Main functions:
+#' \describe{
+#'   \item{\code{\link{fetch_enr}}}{Fetch enrollment data for a school year}
+#'   \item{\code{\link{fetch_enr_multi}}}{Fetch enrollment data for multiple years}
+#'   \item{\code{\link{tidy_enr}}}{Transform wide data to tidy (long) format}
+#'   \item{\code{\link{id_enr_aggs}}}{Add aggregation level flags}
+#'   \item{\code{\link{enr_grade_aggs}}}{Create grade-level aggregations}
+#'   \item{\code{\link{get_available_years}}}{Get list of available data years}
+#' }
+#'
+#' @section Cache functions:
+#' \describe{
+#'   \item{\code{\link{cache_status}}}{View cached data files}
+#'   \item{\code{\link{clear_cache}}}{Remove cached data files}
+#' }
+#'
+#' @section ID System:
+#' Virginia uses a hierarchical ID system based on NCES identifiers:
+#' \itemize{
+#'   \item Division IDs (leaid): 7 characters (e.g., 5100180 = Alexandria City)
+#'   \item School IDs (ncessch): 12 characters (leaid + 5-digit school number)
+#' }
+#'
+#' Virginia has 132 school divisions (equivalent to districts in other states).
+#'
+#' @section Data Sources:
+#' Data is sourced from:
+#' \itemize{
+#'   \item Urban Institute Education Data Portal: \url{https://educationdata.urban.org/}
+#'   \item Original source: NCES Common Core of Data (CCD)
+#'   \item VDOE Fall Membership: \url{https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics}
+#' }
+#'
+#' @section Data Availability:
+#' \itemize{
+#'   \item Years: 1987-2023 (37 years)
+#'   \item Aggregation levels: Division (District), School
+#'   \item Demographics: Race/ethnicity (varies by era), Sex
+#'   \item Grade levels: PK through 12, plus ungraded
+#' }
+#'
+#' @section Format Eras:
+#' \describe{
+#'   \item{Pre-1998 (1987-1997)}{Limited demographics; 5 race categories}
+#'   \item{5-Race Era (1998-2010)}{White, Black, Hispanic, Asian/Pacific Islander, American Indian}
+#'   \item{7-Race Era (2011-2023)}{Added Pacific Islander (separate), Two or More Races}
+#' }
+#'
+#' @docType package
+#' @name vaschooldata-package
+#' @aliases vaschooldata
+#' @keywords internal
+"_PACKAGE"
+
+#' Pipe operator
+#'
+#' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom dplyr %>%
+#' @usage lhs \%>\% rhs
+#' @param lhs A value or the magrittr placeholder.
+#' @param rhs A function call using the magrittr semantics.
+#' @return The result of calling `rhs(lhs)`.
+NULL

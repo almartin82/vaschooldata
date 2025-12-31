@@ -1,0 +1,25 @@
+# R package build artifacts
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+src/*.o
+src/*.so
+src/*.dll
+
+# Package documentation artifacts
+docs/
+doc/
+Meta/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+*.Rproj
+
+# Cache and temp files
+*.rds
+*.csv.gz
