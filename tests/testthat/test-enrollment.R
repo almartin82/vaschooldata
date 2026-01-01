@@ -40,42 +40,7 @@ test_that("fetch_enr validates year parameter", {
   expect_error(fetch_enr(1986), "end_year must be between")
 })
 
-test_that("build_api_url constructs valid URLs", {
-  url <- build_api_url(
-    level = "schools",
-    source = "ccd",
-    topic = "enrollment",
-    year = 2023,
-    filters = list(fips = 51)
-  )
-
-  expect_true(grepl("educationdata.urban.org", url))
-  expect_true(grepl("schools", url))
-  expect_true(grepl("ccd", url))
-  expect_true(grepl("enrollment", url))
-  expect_true(grepl("2023", url))
-  expect_true(grepl("fips=51", url))
-})
-
-test_that("build_api_url handles optional parameters", {
-  # Without filters
-  url1 <- build_api_url(
-    level = "schools",
-    source = "ccd",
-    topic = "enrollment"
-  )
-  expect_false(grepl("\\?", url1))
-
-  # With by parameter
-  url2 <- build_api_url(
-    level = "schools",
-    source = "ccd",
-    topic = "enrollment",
-    year = 2023,
-    by = "race"
-  )
-  expect_true(grepl("race", url2))
-})
+# Note: build_api_url tests removed - package now uses VDOE data sources only
 
 test_that("map_race_code converts codes correctly", {
   expect_equal(map_race_code(1), "white")

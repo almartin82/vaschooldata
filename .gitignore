@@ -20,6 +20,9 @@ Thumbs.db
 .vscode/
 *.Rproj
 
+# Build artifacts
+..Rcheck/
+
 # Cache and temp files
 *.rds
 *.csv.gz

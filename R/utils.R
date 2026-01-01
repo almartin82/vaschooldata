@@ -7,19 +7,7 @@
 #
 # ==============================================================================
 
-#' Pipe operator
-#'
-#' See \code{dplyr::\link[dplyr:reexports]{\%>\%}} for details.
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom dplyr %>%
-#' @usage lhs \%>\% rhs
-#' @param lhs A value or the magrittr placeholder.
-#' @param rhs A function call using the magrittr semantics.
-#' @return The result of calling `rhs(lhs)`.
+#' @importFrom rlang .data
 NULL
 
 
@@ -214,7 +202,7 @@ map_grade_code <- function(grade_code) {
     "TOTAL" = "TOTAL"
   )
 
-  as.character(grade_code) %>%
+  as.character(grade_code) |>
     sapply(function(x) {
       if (x %in% names(grade_map)) grade_map[x] else x
     })

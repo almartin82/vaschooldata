@@ -22,10 +22,10 @@
 #' }
 #'
 #' @section ID System:
-#' Virginia uses a hierarchical ID system based on NCES identifiers:
+#' Virginia uses a hierarchical ID system:
 #' \itemize{
-#'   \item Division IDs (leaid): 7 characters (e.g., 5100180 = Alexandria City)
-#'   \item School IDs (ncessch): 12 characters (leaid + 5-digit school number)
+#'   \item Division IDs: 7 characters (e.g., 5100180 = Alexandria City)
+#'   \item School IDs: 12 characters (division ID + 5-digit school number)
 #' }
 #'
 #' Virginia has 132 school divisions (equivalent to districts in other states).
@@ -59,17 +59,3 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' Pipe operator
-#'
-#' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom dplyr %>%
-#' @usage lhs \%>\% rhs
-#' @param lhs A value or the magrittr placeholder.
-#' @param rhs A function call using the magrittr semantics.
-#' @return The result of calling `rhs(lhs)`.
-NULL

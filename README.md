@@ -6,7 +6,7 @@
 
 **[Documentation](https://almartin82.github.io/vaschooldata/)** | [GitHub](https://github.com/almartin82/vaschooldata)
 
-An R package for accessing Virginia school enrollment data from the Virginia Department of Education (VDOE). **37 years of data** (1987-2024) for every school, division, and the state via the Urban Institute's Education Data Portal.
+An R package for accessing Virginia school enrollment data from the Virginia Department of Education (VDOE). Data for every school and division in Virginia.
 
 ## What can you find with vaschooldata?
 
@@ -229,8 +229,8 @@ enr |>
 | Column | Description |
 |--------|-------------|
 | `end_year` | School year end (e.g., 2023 for 2022-23) |
-| `district_id` | NCES LEA ID (7 characters) |
-| `campus_id` | NCES School ID (12 characters) |
+| `district_id` | LEA ID (7 characters) |
+| `campus_id` | School ID (12 characters) |
 | `type` | "State", "District", or "Campus" |
 | `district_name`, `campus_name` | Names |
 | `county` | County name |
