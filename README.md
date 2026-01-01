@@ -2,12 +2,13 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/almartin82/vaschooldata/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/almartin82/vaschooldata/actions/workflows/R-CMD-check.yaml)
+[![Python Tests](https://github.com/almartin82/vaschooldata/actions/workflows/python-test.yaml/badge.svg)](https://github.com/almartin82/vaschooldata/actions/workflows/python-test.yaml)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 **[Documentation](https://almartin82.github.io/vaschooldata/)** | [GitHub](https://github.com/almartin82/vaschooldata)
 
-An R package for accessing Virginia school enrollment data from the Virginia Department of Education (VDOE). Data for every school and division in Virginia.
+Fetch and analyze Virginia school enrollment data from the Virginia Department of Education (VDOE) in R or Python. Data for every school and division in Virginia.
 
 ## What can you find with vaschooldata?
 
@@ -200,7 +201,7 @@ fetch_enr_multi(c(1990, 2000, 2010, 2023)) |>
 devtools::install_github("almartin82/vaschooldata")
 ```
 
-## Quick Start
+## R Quick Start
 
 ```r
 library(vaschooldata)
@@ -221,6 +222,28 @@ enr |>
   arrange(desc(n_students)) |>
   select(district_name, n_students) |>
   head(5)
+```
+
+## Python Quick Start
+
+```python
+import pyvaschooldata as va
+
+# Fetch 2023 data (2022-23 school year)
+enr = va.fetch_enr(2023)
+
+# Statewide total
+total = enr[(enr['is_state'] == True) & (enr['subgroup'] == 'total_enrollment') & (enr['grade_level'] == 'TOTAL')]['n_students'].sum()
+print(f"{total:,} students")
+#> 1,261,456 students
+
+# Get multiple years
+enr_multi = va.fetch_enr_multi([2020, 2021, 2022, 2023])
+
+# Check available years
+years = va.get_available_years()
+print(f"Data available: {years['min_year']}-{years['max_year']}")
+#> Data available: 2016-2025
 ```
 
 ## Data Format
