@@ -1,13 +1,10 @@
 Package: vaschooldata
-Title: Fetch and Process Virginia School Data
+Title: Virginia School Data
 Version: 0.1.0
 Authors@R:
     person("Al", "Martin", , "almartin@example.com", role = c("aut", "cre"))
-Description: Downloads and processes school enrollment data from the Virginia
-    Department of Education (VDOE). Provides functions for fetching Fall
-    Membership enrollment data from VDOE sources and transforming it into tidy
-    format for analysis. Supports data covering all Virginia school divisions
-    and schools.
+Description: A simple, consistent interface for accessing Virginia
+    school data in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
