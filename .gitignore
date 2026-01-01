@@ -21,7 +21,7 @@ Thumbs.db
 *.Rproj
 
 # Build artifacts
-..Rcheck/
+*.Rcheck/
 
 # Cache and temp files
 *.rds
