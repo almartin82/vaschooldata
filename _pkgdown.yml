@@ -14,6 +14,7 @@ reference:
     contents:
       - fetch_enr
       - fetch_enr_multi
+      - fetch_enr_local
       - get_available_years
 
   - title: Data Transformation
@@ -22,6 +23,11 @@ reference:
       - tidy_enr
       - id_enr_aggs
       - enr_grade_aggs
+
+  - title: Local Import
+    desc: Functions for importing local data files
+    contents:
+      - import_local_fm
 
   - title: Cache Management
     desc: Functions for managing locally cached data
