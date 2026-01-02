@@ -9,8 +9,6 @@ src/*.dll
 
 # Package documentation artifacts
 docs/
-doc/
-Meta/
 
 # OS files
 .DS_Store
