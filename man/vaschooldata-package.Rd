@@ -74,6 +74,7 @@ Note: This package does NOT use federal data sources (NCES, Urban Institute, etc
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://almartin82.github.io/vaschooldata}
   \item \url{https://github.com/almartin82/vaschooldata}
   \item Report bugs at \url{https://github.com/almartin82/vaschooldata/issues}
 }
