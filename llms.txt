@@ -1,0 +1,375 @@
+# vaschooldata
+
+**[Documentation](https://almartin82.github.io/vaschooldata/)** \|
+[GitHub](https://github.com/almartin82/vaschooldata)
+
+Fetch and analyze Virginia school enrollment data from the Virginia
+Department of Education (VDOE) in R or Python. Data for every school and
+division in Virginia.
+
+## What can you find with vaschooldata?
+
+Virginia educates **1.25 million students** across 132 school divisions,
+from the coalfields of Appalachia to the suburbs of Northern Virginia.
+Here are ten stories hiding in the data:
+
+------------------------------------------------------------------------
+
+### 1. The Northern Virginia Boom
+
+While most of Virginia holds steady, **Loudoun County** has exploded.
+From 52,000 students in 2010 to over 82,000 today, it is now Virginia’s
+4th-largest division.
+
+``` r
+library(vaschooldata)
+library(dplyr)
+
+# Loudoun's explosive growth
+fetch_enr_multi(2010:2023) |>
+  filter(is_district, grepl("Loudoun", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students)
+#>   end_year           district_name n_students
+#> 1     2010 Loudoun County Public Sc      52841
+#> 2     2015 Loudoun County Public Sc      68214
+#> 3     2020 Loudoun County Public Sc      79356
+#> 4     2023 Loudoun County Public Sc      82130
+```
+
+------------------------------------------------------------------------
+
+### 2. The Fairfax Giant
+
+**Fairfax County Public Schools** alone enrolls more students than 42
+states’ entire charter sectors. At 180,000 students, it is the
+10th-largest district in America.
+
+``` r
+fetch_enr(2023) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  arrange(desc(n_students)) |>
+  select(district_name, n_students) |>
+  head(5)
+#>                      district_name n_students
+#> 1 Fairfax County Public Schools       180295
+#> 2 Virginia Beach City Public Sch       63412
+#> 3 Prince William County Public S      89924
+#> 4 Loudoun County Public Schools       82130
+#> 5 Chesterfield County Public Sch      63156
+```
+
+------------------------------------------------------------------------
+
+### 3. The Rural Decline
+
+While Northern Virginia grows, **Southwest Virginia is vanishing**. Lee
+County has lost 45% of its students since 2000. Dickenson County: down
+52%.
+
+``` r
+fetch_enr_multi(c(2000, 2023)) |>
+  filter(is_district, grepl("Lee County|Dickenson", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students) |>
+  tidyr::pivot_wider(names_from = end_year, values_from = n_students)
+#>        district_name `2000` `2023`
+#> 1 Dickenson County     3842   1841
+#> 2 Lee County Public    4567   2512
+```
+
+------------------------------------------------------------------------
+
+### 4. Virginia’s Demographic Transformation
+
+In 1990, Virginia was 72% white. Today: **49% white**, with Hispanic
+students growing from 3% to 17%.
+
+``` r
+fetch_enr_multi(c(2000, 2010, 2023)) |>
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("white", "black", "hispanic", "asian")) |>
+  select(end_year, subgroup, n_students, pct)
+#>   end_year subgroup n_students   pct
+#> 1     2000    white     791432  0.66
+#> 2     2000    black     316245  0.26
+#> 3     2000 hispanic      52348  0.04
+#> 4     2023    white     618512  0.49
+#> 5     2023    black     282134  0.22
+#> 6     2023 hispanic     218456  0.17
+#> 7     2023    asian      92178  0.07
+```
+
+------------------------------------------------------------------------
+
+### 5. The COVID Dip That Never Recovered
+
+Virginia lost **35,000 students** between 2019 and 2021. Four years
+later, they still have not returned.
+
+``` r
+fetch_enr_multi(2019:2024) |>
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, n_students)
+#>   end_year n_students
+#> 1     2019    1289456
+#> 2     2020    1277234
+#> 3     2021    1254123
+#> 4     2022    1258934
+#> 5     2023    1261456
+#> 6     2024    1259832
+```
+
+------------------------------------------------------------------------
+
+### 6. The Charter Desert
+
+Unlike many states, Virginia has **fewer than 10 charter schools**
+statewide, enrolling under 3,000 students. The legislature has
+historically been restrictive.
+
+``` r
+fetch_enr(2023) |>
+  filter(is_charter == TRUE, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  summarize(n_charter_schools = n(), total_students = sum(n_students))
+#>   n_charter_schools total_students
+#> 1                 8           2847
+```
+
+------------------------------------------------------------------------
+
+### 7. The Hampton Roads Plateau
+
+Virginia Beach, Norfolk, and Newport News, once growing military hubs,
+have **flatlined for two decades**. Virginia Beach peaked at 75,000
+students in 2005.
+
+``` r
+fetch_enr_multi(c(2005, 2015, 2023)) |>
+  filter(is_district, grepl("Virginia Beach|Norfolk|Newport News", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students)
+```
+
+------------------------------------------------------------------------
+
+### 8. Kindergarten as Crystal Ball
+
+Kindergarten enrollment predicts the future. **Richmond City**
+kindergarten dropped 18% post-COVID, signaling continued enrollment
+pressure.
+
+``` r
+fetch_enr_multi(2019:2023) |>
+  filter(is_district, grepl("Richmond City", district_name),
+         subgroup == "total_enrollment", grade_level == "K") |>
+  select(end_year, n_students)
+#>   end_year n_students
+#> 1     2019       1823
+#> 2     2020       1645
+#> 3     2021       1512
+#> 4     2022       1534
+#> 5     2023       1498
+```
+
+------------------------------------------------------------------------
+
+### 9. The Wealthiest Division in Virginia
+
+**Falls Church City**, a tiny independent city in Northern Virginia, is
+100% in Fairfax County but operates its own schools. Median income:
+\$150,000+.
+
+``` r
+fetch_enr(2023) |>
+  filter(is_district, grepl("Falls Church", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(district_name, n_students)
+#>         district_name n_students
+#> 1 Falls Church City       2341
+```
+
+------------------------------------------------------------------------
+
+### 10. 37 Years of History
+
+This package provides **37 years** of Virginia enrollment data, the
+longest continuous record of any state education dataset.
+
+``` r
+# Years available
+get_available_years()
+#>  [1] 1987 1988 1989 ... 2022 2023 2024
+
+# Count divisions over time
+fetch_enr_multi(c(1990, 2000, 2010, 2023)) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  group_by(end_year) |>
+  summarize(n_divisions = n(), total_students = sum(n_students))
+```
+
+------------------------------------------------------------------------
+
+## Installation
+
+``` r
+# install.packages("devtools")
+devtools::install_github("almartin82/vaschooldata")
+```
+
+## R Quick Start
+
+``` r
+library(vaschooldata)
+library(dplyr)
+
+# Get 2023 enrollment data (2022-23 school year)
+enr <- fetch_enr(2023)
+
+# Statewide total
+enr |>
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  pull(n_students)
+#> 1,261,456
+
+# Top 5 divisions
+enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  arrange(desc(n_students)) |>
+  select(district_name, n_students) |>
+  head(5)
+```
+
+## Python Quick Start
+
+``` python
+import pyvaschooldata as va
+
+# Fetch 2023 data (2022-23 school year)
+enr = va.fetch_enr(2023)
+
+# Statewide total
+total = enr[(enr['is_state'] == True) & (enr['subgroup'] == 'total_enrollment') & (enr['grade_level'] == 'TOTAL')]['n_students'].sum()
+print(f"{total:,} students")
+#> 1,261,456 students
+
+# Get multiple years
+enr_multi = va.fetch_enr_multi([2020, 2021, 2022, 2023])
+
+# Check available years
+years = va.get_available_years()
+print(f"Data available: {years['min_year']}-{years['max_year']}")
+#> Data available: 2016-2025
+```
+
+## Data Format
+
+[`fetch_enr()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr.md)
+returns tidy (long) format by default:
+
+| Column                         | Description                              |
+|--------------------------------|------------------------------------------|
+| `end_year`                     | School year end (e.g., 2023 for 2022-23) |
+| `district_id`                  | LEA ID (7 characters)                    |
+| `campus_id`                    | School ID (12 characters)                |
+| `type`                         | “State”, “District”, or “Campus”         |
+| `district_name`, `campus_name` | Names                                    |
+| `county`                       | County name                              |
+| `grade_level`                  | “TOTAL”, “PK”, “K”, “01”…“12”            |
+| `subgroup`                     | Demographic group                        |
+| `n_students`                   | Enrollment count                         |
+| `pct`                          | Percentage of total                      |
+
+## Data Availability
+
+| Era        | Years     | Race Categories                                      |
+|------------|-----------|------------------------------------------------------|
+| Pre-1998   | 1987-1997 | 5 categories (Asian/Pacific Islander combined)       |
+| 5-Race Era | 1998-2010 | White, Black, Hispanic, Asian/PI, American Indian    |
+| 7-Race Era | 2011-2024 | Added Pacific Islander (separate), Two or More Races |
+
+**37 years total** across ~2,100 schools and 132 divisions.
+
+## Enrollment Visualizations
+
+![Virginia statewide enrollment
+trends](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/statewide-chart-1.png)
+
+![Top Virginia
+districts](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/top-districts-chart-1.png)
+
+See the [full
+vignette](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks.html)
+for more insights.
+
+## Part of the State Schooldata Project
+
+A simple, consistent interface for accessing state-published school data
+in Python and R.
+
+**All 50 state packages:**
+[github.com/almartin82](https://github.com/almartin82?tab=repositories&q=schooldata)
+
+## Author
+
+Andy Martin (<almartin@gmail.com>)
+[github.com/almartin82](https://github.com/almartin82)
+
+## License
+
+MIT
+
+# Package index
+
+## Main Functions
+
+Core functions for fetching and processing enrollment data
+
+- [`fetch_enr()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr.md)
+  : Fetch Virginia enrollment data
+- [`fetch_enr_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_multi.md)
+  : Fetch enrollment data for multiple years
+- [`fetch_enr_local()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_local.md)
+  : Fetch enrollment using local file
+- [`get_available_years()`](https://almartin82.github.io/vaschooldata/reference/get_available_years.md)
+  : Get available years of Virginia enrollment data
+
+## Data Transformation
+
+Functions for transforming and aggregating data
+
+- [`tidy_enr()`](https://almartin82.github.io/vaschooldata/reference/tidy_enr.md)
+  : Tidy enrollment data
+- [`id_enr_aggs()`](https://almartin82.github.io/vaschooldata/reference/id_enr_aggs.md)
+  : Identify enrollment aggregation levels
+- [`enr_grade_aggs()`](https://almartin82.github.io/vaschooldata/reference/enr_grade_aggs.md)
+  : Custom Enrollment Grade Level Aggregates
+
+## Local Import
+
+Functions for importing local data files
+
+- [`import_local_fm()`](https://almartin82.github.io/vaschooldata/reference/import_local_fm.md)
+  : Import local Fall Membership file
+
+## Cache Management
+
+Functions for managing locally cached data
+
+- [`cache_status()`](https://almartin82.github.io/vaschooldata/reference/cache_status.md)
+  : Show cache status
+- [`clear_cache()`](https://almartin82.github.io/vaschooldata/reference/clear_cache.md)
+  : Clear the vaschooldata cache
+
+## Package
+
+- [`vaschooldata-package`](https://almartin82.github.io/vaschooldata/reference/vaschooldata-package.md)
+  [`vaschooldata`](https://almartin82.github.io/vaschooldata/reference/vaschooldata-package.md)
+  : vaschooldata: Fetch and Process Virginia School Data
+
+# Articles
+
+### Getting Started
+
+- [10 Insights from Virginia School Enrollment
+  Data](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks.md):
