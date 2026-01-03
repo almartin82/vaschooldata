@@ -2,6 +2,9 @@
 # Note: Most tests are marked as skip_on_cran since they require network access
 
 test_that("safe_numeric handles various inputs", {
+  # Use internal function with ::: operator
+  safe_numeric <- vaschooldata:::safe_numeric
+
   # Normal numbers
   expect_equal(safe_numeric("100"), 100)
   expect_equal(safe_numeric("1,234"), 1234)
@@ -25,49 +28,56 @@ test_that("get_available_years returns expected range", {
   years <- get_available_years()
 
   expect_true(is.integer(years))
-  expect_equal(min(years), 1987L)
+  expect_equal(min(years), 2016L)
   expect_equal(max(years), 2024L)
-  expect_true(length(years) == 38)  # 1987-2024 inclusive
+  expect_true(length(years) == 9)  # 2016-2024 inclusive
 })
 
 test_that("get_va_fips returns Virginia FIPS code", {
+  get_va_fips <- vaschooldata:::get_va_fips
   expect_equal(get_va_fips(), 51L)
 })
 
 test_that("fetch_enr validates year parameter", {
   expect_error(fetch_enr(1900), "end_year must be between")
   expect_error(fetch_enr(2030), "end_year must be between")
-  expect_error(fetch_enr(1986), "end_year must be between")
+  expect_error(fetch_enr(2015), "end_year must be between")
 })
 
 # Note: build_api_url tests removed - package now uses VDOE data sources only
 
-test_that("map_race_code converts codes correctly", {
-  expect_equal(map_race_code(1), "white")
-  expect_equal(map_race_code(2), "black")
-  expect_equal(map_race_code(3), "hispanic")
-  expect_equal(map_race_code(4), "asian")
-  expect_equal(map_race_code(5), "native_american")
-  expect_equal(map_race_code(6), "pacific_islander")
-  expect_equal(map_race_code(7), "multiracial")
-  expect_equal(map_race_code(99), "total")
+test_that("map_vdoe_race converts race names correctly", {
+  map_vdoe_race <- vaschooldata:::map_vdoe_race
+  expect_equal(map_vdoe_race("White"), "white")
+  expect_equal(map_vdoe_race("Black"), "black")
+  expect_equal(map_vdoe_race("Hispanic"), "hispanic")
+  expect_equal(map_vdoe_race("Asian"), "asian")
+  expect_equal(map_vdoe_race("American Indian"), "native_american")
+  expect_equal(map_vdoe_race("Native Hawaiian"), "pacific_islander")
+  expect_equal(map_vdoe_race("Two or More Races"), "multiracial")
 })
 
 test_that("map_grade_code converts codes correctly", {
-  expect_equal(map_grade_code(-1), "PK")
-  expect_equal(map_grade_code(0), "K")
-  expect_equal(map_grade_code(1), "01")
-  expect_equal(map_grade_code(12), "12")
-  expect_equal(map_grade_code(99), "TOTAL")
+  map_grade_code <- vaschooldata:::map_grade_code
+  expect_equal(unname(map_grade_code("PK")), "PK")
+  expect_equal(unname(map_grade_code("K")), "K")
+  expect_equal(unname(map_grade_code("KG")), "K")
+  expect_equal(unname(map_grade_code("1")), "01")
+  expect_equal(unname(map_grade_code("12")), "12")
+  expect_equal(unname(map_grade_code("TOTAL")), "TOTAL")
 })
 
 test_that("get_cache_dir returns valid path", {
+  get_cache_dir <- vaschooldata:::get_cache_dir
   cache_dir <- get_cache_dir()
   expect_true(is.character(cache_dir))
   expect_true(grepl("vaschooldata", cache_dir))
 })
 
 test_that("cache functions work correctly", {
+  get_cache_path <- vaschooldata:::get_cache_path
+  cache_exists <- vaschooldata:::cache_exists
+
   # Test cache path generation
   path <- get_cache_path(2023, "tidy")
   expect_true(grepl("enr_tidy_2023.rds", path))
