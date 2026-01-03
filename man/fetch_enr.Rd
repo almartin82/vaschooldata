@@ -38,7 +38,7 @@ enr_wide <- fetch_enr(2024, tidy = FALSE)
 enr_fresh <- fetch_enr(2024, use_cache = FALSE)
 
 # Filter to specific division
-fairfax <- enr_2024 \%>\%
+fairfax <- enr_2024 |>
   dplyr::filter(district_name == "FAIRFAX COUNTY PUBLIC SCHOOLS")
 }
 }
