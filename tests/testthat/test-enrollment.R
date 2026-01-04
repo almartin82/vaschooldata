@@ -90,6 +90,7 @@ test_that("cache functions work correctly", {
 test_that("fetch_enr downloads and processes data", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   # Use a recent year
   result <- fetch_enr(2022, tidy = FALSE, use_cache = FALSE)
@@ -118,6 +119,7 @@ test_that("fetch_enr downloads and processes data", {
 test_that("tidy_enr produces correct long format", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   # Get wide data
   wide <- fetch_enr(2022, tidy = FALSE, use_cache = TRUE)
@@ -139,6 +141,7 @@ test_that("tidy_enr produces correct long format", {
 test_that("id_enr_aggs adds correct flags", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   # Get tidy data with aggregation flags
   result <- fetch_enr(2022, tidy = TRUE, use_cache = TRUE)
@@ -163,6 +166,7 @@ test_that("id_enr_aggs adds correct flags", {
 test_that("fetch_enr works for different eras", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   # Test 7-race era (2011+)
   result_2020 <- fetch_enr(2020, tidy = FALSE, use_cache = TRUE)
@@ -178,6 +182,7 @@ test_that("fetch_enr works for different eras", {
 test_that("fetch_enr_multi works for multiple years", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   result <- fetch_enr_multi(2020:2022, tidy = TRUE, use_cache = TRUE)
 
@@ -194,6 +199,7 @@ test_that("fetch_enr_multi works for multiple years", {
 test_that("enr_grade_aggs creates correct aggregations", {
   skip_on_cran()
   skip_if_offline()
+  skip_if_vdoe_unavailable()
 
   tidy_data <- fetch_enr(2022, tidy = TRUE, use_cache = TRUE)
   grade_aggs <- enr_grade_aggs(tidy_data)
