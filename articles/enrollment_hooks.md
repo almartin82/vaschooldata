@@ -10,8 +10,8 @@ theme_set(theme_minimal(base_size = 14))
 ```
 
 This vignette explores Virginia’s public school enrollment data,
-surfacing key trends and demographic patterns across 10 years of data
-(2016-2025).
+surfacing key trends and demographic patterns across 9 years of data
+(2016-2024).
 
 ------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ Virginia’s public schools educate more than 1.2 million students across
 132 school divisions (Virginia’s term for districts).
 
 ``` r
-enr <- fetch_enr_multi(2016:2025)
+enr <- fetch_enr_multi(2016:2024)
 
 state_totals <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -38,7 +38,7 @@ ggplot(state_totals, aes(x = end_year, y = n_students)) +
   geom_point(size = 3, color = "#003366") +
   scale_y_continuous(labels = scales::comma) +
   labs(
-    title = "Virginia Public School Enrollment (2016-2025)",
+    title = "Virginia Public School Enrollment (2016-2024)",
     subtitle = "The Commonwealth educates over 1.2 million students",
     x = "School Year (ending)",
     y = "Total Enrollment"
@@ -54,9 +54,9 @@ largest school systems in America and rivals the total enrollment of
 several states.
 
 ``` r
-enr_2025 <- fetch_enr(2025)
+enr_2024 <- fetch_enr(2024)
 
-top_10 <- enr_2025 |>
+top_10 <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   arrange(desc(n_students)) |>
   head(10) |>
@@ -72,7 +72,7 @@ top_10 |>
   geom_col(fill = "#003366") +
   scale_x_continuous(labels = scales::comma) +
   labs(
-    title = "Virginia's 10 Largest School Divisions (2025)",
+    title = "Virginia's 10 Largest School Divisions (2024)",
     x = "Total Enrollment",
     y = NULL
   )
@@ -86,7 +86,7 @@ The Northern Virginia suburbs of Washington, D.C. – Fairfax, Loudoun,
 and Prince William counties – together educate nearly 400,000 students.
 
 ``` r
-nova <- enr_2025 |>
+nova <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Fairfax|Loudoun|Prince William", district_name, ignore.case = TRUE)) |>
   select(district_name, n_students) |>
@@ -95,7 +95,7 @@ nova <- enr_2025 |>
 nova
 
 nova_total <- sum(nova$n_students, na.rm = TRUE)
-state_total <- enr_2025 |>
+state_total <- enr_2024 |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   pull(n_students)
 
@@ -112,7 +112,7 @@ Hispanic and Asian student populations have grown substantially, while
 white student enrollment has declined.
 
 ``` r
-demographics <- enr_2025 |>
+demographics <- enr_2024 |>
   filter(is_state, grade_level == "TOTAL",
          subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) |>
   mutate(pct = round(pct * 100, 1)) |>
@@ -131,7 +131,7 @@ demographics |>
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.15))) +
   scale_fill_brewer(palette = "Set2") +
   labs(
-    title = "Virginia Student Demographics (2025)",
+    title = "Virginia Student Demographics (2024)",
     subtitle = "White students remain the plurality, but diversity is growing",
     x = "Number of Students",
     y = NULL
@@ -148,14 +148,14 @@ the state, driven by data center development and suburban expansion.
 ``` r
 growth_divisions <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         end_year %in% c(2016, 2025)) |>
+         end_year %in% c(2016, 2024)) |>
   group_by(district_name) |>
   filter(n() == 2) |>
   summarize(
     y2016 = n_students[end_year == 2016],
-    y2025 = n_students[end_year == 2025],
-    change = y2025 - y2016,
-    pct_change = round((y2025 / y2016 - 1) * 100, 1),
+    y2024 = n_students[end_year == 2024],
+    change = y2024 - y2016,
+    pct_change = round((y2024 / y2016 - 1) * 100, 1),
     .groups = "drop"
   ) |>
   filter(y2016 > 10000) |>
@@ -169,7 +169,7 @@ growth_divisions |>
   geom_text(aes(label = paste0(pct_change, "%")), hjust = -0.1) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(
-    title = "Fastest-Growing Virginia School Divisions (2016-2025)",
+    title = "Fastest-Growing Virginia School Divisions (2016-2024)",
     subtitle = "Among divisions with 10,000+ students in 2016",
     x = "Percent Change",
     y = NULL
@@ -213,7 +213,7 @@ hispanic_trend |>
   scale_y_continuous(labels = scales::comma) +
   scale_color_brewer(palette = "Set1") +
   labs(
-    title = "Virginia Enrollment by Race/Ethnicity (2016-2025)",
+    title = "Virginia Enrollment by Race/Ethnicity (2016-2024)",
     subtitle = "Hispanic enrollment growth outpaces other groups",
     x = "School Year",
     y = "Enrollment",
@@ -231,13 +231,13 @@ Virginia and the Southside have seen enrollment declines.
 ``` r
 declining <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         end_year %in% c(2016, 2025)) |>
+         end_year %in% c(2016, 2024)) |>
   group_by(district_name) |>
   filter(n() == 2) |>
   summarize(
     y2016 = n_students[end_year == 2016],
-    y2025 = n_students[end_year == 2025],
-    pct_change = round((y2025 / y2016 - 1) * 100, 1),
+    y2024 = n_students[end_year == 2024],
+    pct_change = round((y2024 / y2016 - 1) * 100, 1),
     .groups = "drop"
   ) |>
   filter(y2016 > 1000) |>
@@ -273,7 +273,7 @@ Virginia’s school division structure – based on cities and counties –
 creates significant variation in size and demographics.
 
 ``` r
-division_stats <- enr_2025 |>
+division_stats <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   summarize(
     n_divisions = n_distinct(district_name),
