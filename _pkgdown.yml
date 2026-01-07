@@ -21,6 +21,13 @@ reference:
       - fetch_enr_local
       - get_available_years
 
+  - title: Graduation Rate Functions
+    desc: Functions for fetching and processing graduation rate data
+    contents:
+      - fetch_graduation
+      - fetch_graduation_multi
+      - get_available_grad_years
+
   - title: Data Transformation
     desc: Functions for transforming and aggregating data
     contents:
@@ -38,6 +45,12 @@ reference:
     contents:
       - cache_status
       - clear_cache
+      - clear_directory_cache
+
+  - title: Directory Data
+    desc: Functions for fetching and processing school directory data
+    contents:
+      - fetch_directory
 
   - title: Package
     contents:

@@ -59,3 +59,34 @@
 #' @keywords internal
 "_PACKAGE"
 
+# Import pipe operator for use in internal functions
+#' @importFrom magrittr `%>%`
+NULL
+
+# Global variables for NSE (non-standard evaluation)
+# These are used in dplyr/tidyr operations
+utils::globalVariables(c(
+  ".data",
+  "all_of",
+  "cohort_size",
+  "completion_rate",
+  "diploma_count",
+  "diploma_type",
+  "division_name",
+  "division_number",
+  "dropout_rate",
+  "dropouts",
+  "end_year",
+  "graduation_rate",
+  "is_district",
+  "is_school",
+  "is_state",
+  "level",
+  "long_term_absence",
+  "rate_type",
+  "school_name",
+  "school_number",
+  "still_enrolled",
+  "total_graduates"
+))
+
