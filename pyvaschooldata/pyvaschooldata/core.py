@@ -165,3 +165,118 @@ def get_available_years() -> dict:
                 "min_year": int(result_dict["min_year"]),
                 "max_year": int(result_dict["max_year"]),
             }
+
+
+def fetch_graduation(end_year: int) -> pd.DataFrame:
+    """
+    Fetch Virginia graduation rate data for a single year.
+
+    Parameters
+    ----------
+    end_year : int
+        The ending year of the school year (e.g., 2023 for 2022-23).
+
+    Returns
+    -------
+    pd.DataFrame
+        Graduation rate data with columns for school/district identifiers,
+        graduation rates, cohort sizes, and diploma type breakdowns.
+
+    Examples
+    --------
+    >>> import pyvaschooldata as va
+    >>> df = va.fetch_graduation(2023)
+    >>> df.head()
+    """
+    pkg = _get_pkg()
+    with localconverter(robjects.default_converter + pandas2ri.converter):
+        r_df = pkg.fetch_graduation(end_year)
+        if isinstance(r_df, pd.DataFrame):
+            return r_df
+        return pandas2ri.rpy2py(r_df)
+
+
+def fetch_graduation_multi(end_years: list[int]) -> pd.DataFrame:
+    """
+    Fetch Virginia graduation rate data for multiple years.
+
+    Parameters
+    ----------
+    end_years : list[int]
+        List of ending years (e.g., [2020, 2021, 2022]).
+
+    Returns
+    -------
+    pd.DataFrame
+        Combined graduation rate data for all requested years.
+
+    Examples
+    --------
+    >>> import pyvaschooldata as va
+    >>> df = va.fetch_graduation_multi([2020, 2021, 2022])
+    """
+    pkg = _get_pkg()
+    with localconverter(robjects.default_converter + pandas2ri.converter):
+        r_years = robjects.IntVector(end_years)
+        r_df = pkg.fetch_graduation_multi(r_years)
+        if isinstance(r_df, pd.DataFrame):
+            return r_df
+        return pandas2ri.rpy2py(r_df)
+
+
+def get_available_grad_years() -> dict:
+    """
+    Get the range of available years for graduation rate data.
+
+    Returns
+    -------
+    dict
+        Dictionary with 'min_year' and 'max_year' keys.
+
+    Examples
+    --------
+    >>> import pyvaschooldata as va
+    >>> years = va.get_available_grad_years()
+    >>> print(f"Graduation data available from {years['min_year']} to {years['max_year']}")
+    """
+    pkg = _get_pkg()
+    with localconverter(robjects.default_converter + pandas2ri.converter):
+        r_result = pkg.get_available_grad_years()
+        # Handle different result types from rpy2
+        if isinstance(r_result, dict):
+            return {
+                "min_year": int(r_result["min_year"]),
+                "max_year": int(r_result["max_year"]),
+            }
+        elif hasattr(r_result, "rx2"):
+            # R vector with rx2 access
+            return {
+                "min_year": int(r_result.rx2("min_year")[0]),
+                "max_year": int(r_result.rx2("max_year")[0]),
+            }
+        elif hasattr(r_result, "names"):
+            # NamedList - access by finding index from names
+            names_attr = r_result.names
+            if callable(names_attr):
+                names_attr = names_attr()
+            if names_attr is None:
+                raise ValueError("R result has no names attribute")
+            names = list(names_attr)
+            min_idx = names.index("min_year")
+            max_idx = names.index("max_year")
+            min_val = r_result[min_idx]
+            max_val = r_result[max_idx]
+            if hasattr(min_val, "__getitem__") and not isinstance(min_val, (int, float, str)):
+                min_val = min_val[0]
+            if hasattr(max_val, "__getitem__") and not isinstance(max_val, (int, float, str)):
+                max_val = max_val[0]
+            return {
+                "min_year": int(min_val),
+                "max_year": int(max_val),
+            }
+        else:
+            result_dict = dict(r_result)
+            return {
+                "min_year": int(result_dict["min_year"]),
+                "max_year": int(result_dict["max_year"]),
+            }

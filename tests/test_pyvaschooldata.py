@@ -28,6 +28,20 @@ def test_has_get_available_years():
     assert callable(pyvaschooldata.get_available_years)
 
 
+def test_has_fetch_graduation():
+    """fetch_graduation function is available."""
+    import pyvaschooldata
+    assert hasattr(pyvaschooldata, 'fetch_graduation')
+    assert callable(pyvaschooldata.fetch_graduation)
+
+
+def test_has_get_available_grad_years():
+    """get_available_grad_years function is available."""
+    import pyvaschooldata
+    assert hasattr(pyvaschooldata, 'get_available_grad_years')
+    assert callable(pyvaschooldata.get_available_grad_years)
+
+
 def test_has_version():
     """Package has a version string."""
     import pyvaschooldata
