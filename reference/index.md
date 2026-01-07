@@ -13,6 +13,17 @@ Core functions for fetching and processing enrollment data
 - [`get_available_years()`](https://almartin82.github.io/vaschooldata/reference/get_available_years.md)
   : Get available years of Virginia enrollment data
 
+## Graduation Rate Functions
+
+Functions for fetching and processing graduation rate data
+
+- [`fetch_graduation()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation.md)
+  : Fetch Virginia graduation rate data
+- [`fetch_graduation_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation_multi.md)
+  : Fetch graduation rate data for multiple years
+- [`get_available_grad_years()`](https://almartin82.github.io/vaschooldata/reference/get_available_grad_years.md)
+  : Get available years of graduation data
+
 ## Data Transformation
 
 Functions for transforming and aggregating data
@@ -39,6 +50,15 @@ Functions for managing locally cached data
   : Show cache status
 - [`clear_cache()`](https://almartin82.github.io/vaschooldata/reference/clear_cache.md)
   : Clear the vaschooldata cache
+- [`clear_directory_cache()`](https://almartin82.github.io/vaschooldata/reference/clear_directory_cache.md)
+  : Clear directory cache
+
+## Directory Data
+
+Functions for fetching and processing school directory data
+
+- [`fetch_directory()`](https://almartin82.github.io/vaschooldata/reference/fetch_directory.md)
+  : Fetch Virginia school directory data
 
 ## Package
 

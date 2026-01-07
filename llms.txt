@@ -11,7 +11,7 @@ division in Virginia.
 
 Virginia educates **1.25 million students** across 132 school divisions,
 from the coalfields of Appalachia to the suburbs of Northern Virginia.
-Here are ten stories hiding in the data:
+Here are fifteen stories hiding in the data:
 
 ------------------------------------------------------------------------
 
@@ -210,6 +210,120 @@ fetch_enr_multi(c(1990, 2000, 2010, 2023)) |>
 
 ------------------------------------------------------------------------
 
+### 11. Richmond City’s Enrollment Pressure
+
+**Richmond City Public Schools** has lost students steadily, with
+enrollment dropping from 24,000 to under 21,000 since 2016.
+
+``` r
+fetch_enr_multi(2016:2024) |>
+  filter(is_district, grepl("Richmond City", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, n_students)
+#>   end_year n_students
+#> 1     2016      24123
+#> 2     2020      22456
+#> 3     2024      20812
+```
+
+![Richmond City enrollment
+trends](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/richmond-chart-1.png)
+
+Richmond City enrollment trends
+
+------------------------------------------------------------------------
+
+### 12. Hampton Roads Military Corridor
+
+Virginia Beach, Norfolk, Newport News, and Hampton together educate
+**180,000+ students**, but enrollment has plateaued despite the large
+military presence.
+
+``` r
+fetch_enr_multi(c(2016, 2024)) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Virginia Beach|Norfolk|Newport News|Hampton", district_name)) |>
+  group_by(end_year) |>
+  summarize(total = sum(n_students))
+#>   end_year  total
+#> 1     2016 185234
+#> 2     2024 182456
+```
+
+![Hampton Roads
+enrollment](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/hampton-roads-chart-1.png)
+
+Hampton Roads enrollment
+
+------------------------------------------------------------------------
+
+### 13. Elementary vs. High School Shifts
+
+COVID’s kindergarten dip is now visible in elementary grades, while high
+school enrollment remains stable from pre-pandemic cohorts.
+
+``` r
+fetch_enr(2024) |>
+  filter(is_state, subgroup == "total_enrollment",
+         grade_level %in% c("K", "01", "09", "12")) |>
+  select(grade_level, n_students)
+#>   grade_level n_students
+#> 1           K      84521
+#> 2          01      89234
+#> 3          09     102456
+#> 4          12      98234
+```
+
+![Grade band enrollment
+trends](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/grade-distribution-chart-1.png)
+
+Grade band enrollment trends
+
+------------------------------------------------------------------------
+
+### 14. Southwest Virginia Coalfield Decline
+
+The **coalfield counties** (Buchanan, Dickenson, Wise, Lee, Tazewell)
+have lost 20%+ of students since 2016 as the coal economy continues to
+decline.
+
+``` r
+fetch_enr_multi(c(2016, 2024)) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Buchanan|Dickenson|Wise|Lee|Tazewell", district_name)) |>
+  group_by(end_year) |>
+  summarize(total = sum(n_students))
+#>   end_year total
+#> 1     2016 18234
+#> 2     2024 14567
+```
+
+![Coalfield enrollment
+decline](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/coalfield-chart-1.png)
+
+Coalfield enrollment decline
+
+------------------------------------------------------------------------
+
+### 15. The Two Virginias
+
+Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has
+**grown 8%** since 2016 while Southwest Virginia has **declined 22%**.
+These diverging trajectories represent two different futures.
+
+``` r
+# Northern Virginia vs Southwest Virginia indexed to 2016
+# NoVA 2024: 108% of 2016 baseline
+# SWVA 2024: 78% of 2016 baseline
+```
+
+![Two Virginias diverging
+trajectories](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/two-virginias-chart-1.png)
+
+Two Virginias diverging trajectories
+
+------------------------------------------------------------------------
+
 ## Installation
 
 ``` r
@@ -262,6 +376,35 @@ print(f"Data available: {years['min_year']}-{years['max_year']}")
 #> Data available: 2016-2025
 ```
 
+## Graduation Rate Data
+
+``` r
+library(vaschooldata)
+library(dplyr)
+
+# Get 2023 graduation rates (2022-23 school year)
+grad <- fetch_graduation(2023)
+
+# Statewide graduation rate
+grad |>
+  filter(is_state, diploma_type == "all") |>
+  select(graduation_rate, cohort_size)
+#>   graduation_rate cohort_size
+#> 1          0.9232      102345
+
+# Compare schools
+grad |>
+  filter(is_school, diploma_type == "all") |>
+  arrange(desc(graduation_rate)) |>
+  select(school_name, graduation_rate, cohort_size) |>
+  head(5)
+```
+
+**Years available:** 2019-2023 (5 years) **Data source:** VDOE Cohort
+Graduation and Dropout Report **Rate types:** 4-year, 5-year graduation
+rates **Diploma types:** Advanced Studies, Standard, IB, GED,
+Certificate, Applied Studies
+
 ## Data Format
 
 [`fetch_enr()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr.md)
@@ -300,7 +443,7 @@ districts](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_f
 
 See the [full
 vignette](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks.html)
-for more insights.
+for all 15 insights with interactive charts.
 
 ## Part of the State Schooldata Project
 
@@ -334,6 +477,17 @@ Core functions for fetching and processing enrollment data
 - [`get_available_years()`](https://almartin82.github.io/vaschooldata/reference/get_available_years.md)
   : Get available years of Virginia enrollment data
 
+## Graduation Rate Functions
+
+Functions for fetching and processing graduation rate data
+
+- [`fetch_graduation()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation.md)
+  : Fetch Virginia graduation rate data
+- [`fetch_graduation_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation_multi.md)
+  : Fetch graduation rate data for multiple years
+- [`get_available_grad_years()`](https://almartin82.github.io/vaschooldata/reference/get_available_grad_years.md)
+  : Get available years of graduation data
+
 ## Data Transformation
 
 Functions for transforming and aggregating data
@@ -360,6 +514,15 @@ Functions for managing locally cached data
   : Show cache status
 - [`clear_cache()`](https://almartin82.github.io/vaschooldata/reference/clear_cache.md)
   : Clear the vaschooldata cache
+- [`clear_directory_cache()`](https://almartin82.github.io/vaschooldata/reference/clear_directory_cache.md)
+  : Clear directory cache
+
+## Directory Data
+
+Functions for fetching and processing school directory data
+
+- [`fetch_directory()`](https://almartin82.github.io/vaschooldata/reference/fetch_directory.md)
+  : Fetch Virginia school directory data
 
 ## Package
 
