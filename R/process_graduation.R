@@ -44,7 +44,7 @@ parse_percentage <- function(x) {
     stringr::str_remove_all("%") %>%
     stringr::str_remove_all(",") %>%
     as.numeric() %>%
-    `/`(100)  # Convert to 0-1 scale
+    `/`(., 100)  # Convert to 0-1 scale
 }
 
 
