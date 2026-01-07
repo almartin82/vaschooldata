@@ -7,6 +7,11 @@
 #
 # ==============================================================================
 
+# Declare global variables for non-standard evaluation (NSE)
+utils::globalVariables(
+  c("subgroup", "grade_level", "n_students", "row_total", "type", "charter_flag", ".")
+)
+
 #' Tidy enrollment data
 #'
 #' Transforms wide enrollment data to long format with subgroup column.
