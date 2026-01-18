@@ -61,6 +61,13 @@ articles:
     navbar: ~
     contents:
       - enrollment_hooks
+  - title: Internal
+    navbar: ~
+    contents:
+      - starts_with("CLAUDE")
+      - starts_with("EXPANSION")
+      - starts_with("TODO")
+      - starts_with("PRD")
 
 home:
   links:
