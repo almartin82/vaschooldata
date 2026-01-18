@@ -21,7 +21,7 @@ Virginia’s public schools educate more than 1.2 million students across
 132 school divisions (Virginia’s term for districts).
 
 ``` r
-enr <- fetch_enr_multi(2016:2024)
+enr <- fetch_enr_multi(2016:2024, use_cache = TRUE)
 
 state_totals <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -54,7 +54,7 @@ largest school systems in America and rivals the total enrollment of
 several states.
 
 ``` r
-enr_2024 <- fetch_enr(2024)
+enr_2024 <- fetch_enr(2024, use_cache = TRUE)
 
 top_10 <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -307,3 +307,11 @@ These patterns shape education policy across the Commonwealth.
 ------------------------------------------------------------------------
 
 *Data sourced from the Virginia Department of Education (VDOE).*
+
+------------------------------------------------------------------------
+
+## Session Info
+
+``` r
+sessionInfo()
+```
