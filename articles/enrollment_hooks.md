@@ -1,4 +1,4 @@
-# 10 Insights from Virginia School Enrollment Data
+# 15 Insights from Virginia School Enrollment Data
 
 ``` r
 library(vaschooldata)
@@ -15,31 +15,32 @@ surfacing key trends and demographic patterns across 9 years of data
 
 ------------------------------------------------------------------------
 
-## 1. Virginia serves over 1.2 million students
+## 1. The Northern Virginia Boom
 
-Virginia’s public schools educate more than 1.2 million students across
-132 school divisions (Virginia’s term for districts).
+While most of Virginia holds steady, **Loudoun County** has exploded.
+From 52,000 students in 2010 to over 82,000 today, it is now Virginia’s
+4th-largest division.
 
 ``` r
-enr <- fetch_enr_multi(2016:2024, use_cache = TRUE)
-
-state_totals <- enr |>
-  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
-  select(end_year, n_students) |>
-  mutate(change = n_students - lag(n_students),
-         pct_change = round(change / lag(n_students) * 100, 2))
-
-state_totals
+# Loudoun's explosive growth
+fetch_enr_multi(2016:2023, use_cache = TRUE) |>
+  filter(is_district, grepl("Loudoun", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students)
 ```
 
 ``` r
-ggplot(state_totals, aes(x = end_year, y = n_students)) +
+loudoun <- fetch_enr_multi(2016:2024, use_cache = TRUE) |>
+  filter(is_district, grepl("Loudoun", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL")
+
+ggplot(loudoun, aes(x = end_year, y = n_students)) +
   geom_line(linewidth = 1.2, color = "#003366") +
   geom_point(size = 3, color = "#003366") +
-  scale_y_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma, limits = c(50000, NA)) +
   labs(
-    title = "Virginia Public School Enrollment (2016-2024)",
-    subtitle = "The Commonwealth educates over 1.2 million students",
+    title = "Loudoun County Enrollment Growth",
+    subtitle = "Virginia's fastest-growing major division",
     x = "School Year (ending)",
     y = "Total Enrollment"
   )
@@ -47,25 +48,29 @@ ggplot(state_totals, aes(x = end_year, y = n_students)) +
 
 ------------------------------------------------------------------------
 
-## 2. Fairfax County is larger than many states
+## 2. The Fairfax Giant
 
-Fairfax County Public Schools, with 180,000+ students, is one of the
-largest school systems in America and rivals the total enrollment of
-several states.
+**Fairfax County Public Schools** alone enrolls more students than 42
+states’ entire charter sectors. At 180,000 students, it is the
+10th-largest district in America.
 
 ``` r
 enr_2024 <- fetch_enr(2024, use_cache = TRUE)
 
+fetch_enr(2023, use_cache = TRUE) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  arrange(desc(n_students)) |>
+  select(district_name, n_students) |>
+  head(5)
+```
+
+``` r
 top_10 <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   arrange(desc(n_students)) |>
   head(10) |>
   select(district_name, n_students)
 
-top_10
-```
-
-``` r
 top_10 |>
   mutate(district_name = forcats::fct_reorder(district_name, n_students)) |>
   ggplot(aes(x = n_students, y = district_name)) +
@@ -80,134 +85,61 @@ top_10 |>
 
 ------------------------------------------------------------------------
 
-## 3. Northern Virginia dominates enrollment
+## 3. The Rural Decline
 
-The Northern Virginia suburbs of Washington, D.C. – Fairfax, Loudoun,
-and Prince William counties – together educate nearly 400,000 students.
-
-``` r
-nova <- enr_2024 |>
-  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Fairfax|Loudoun|Prince William", district_name, ignore.case = TRUE)) |>
-  select(district_name, n_students) |>
-  arrange(desc(n_students))
-
-nova
-
-nova_total <- sum(nova$n_students, na.rm = TRUE)
-state_total <- enr_2024 |>
-  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
-  pull(n_students)
-
-nova_pct <- round(nova_total / state_total * 100, 1)
-```
-
-Northern Virginia represents approximately 30% of statewide enrollment.
-
-------------------------------------------------------------------------
-
-## 4. Virginia is increasingly diverse
-
-Hispanic and Asian student populations have grown substantially, while
-white student enrollment has declined.
+While Northern Virginia grows, **Southwest Virginia is vanishing**. Lee
+County has lost 45% of its students since 2016. Dickenson County: down
+40%+.
 
 ``` r
-demographics <- enr_2024 |>
-  filter(is_state, grade_level == "TOTAL",
-         subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) |>
-  mutate(pct = round(pct * 100, 1)) |>
-  select(subgroup, n_students, pct) |>
-  arrange(desc(n_students))
-
-demographics
+fetch_enr_multi(c(2016, 2023), use_cache = TRUE) |>
+  filter(is_district, grepl("Lee County|Dickenson", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students) |>
+  tidyr::pivot_wider(names_from = end_year, values_from = n_students)
 ```
 
 ``` r
-demographics |>
-  mutate(subgroup = forcats::fct_reorder(subgroup, n_students)) |>
-  ggplot(aes(x = n_students, y = subgroup, fill = subgroup)) +
-  geom_col(show.legend = FALSE) +
-  geom_text(aes(label = paste0(pct, "%")), hjust = -0.1) +
-  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.15))) +
-  scale_fill_brewer(palette = "Set2") +
+rural <- fetch_enr_multi(2016:2024, use_cache = TRUE) |>
+  filter(is_district, grepl("Lee County|Dickenson", district_name, ignore.case = TRUE),
+         subgroup == "total_enrollment", grade_level == "TOTAL")
+
+ggplot(rural, aes(x = end_year, y = n_students, color = district_name)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  scale_y_continuous(labels = scales::comma) +
   labs(
-    title = "Virginia Student Demographics (2024)",
-    subtitle = "White students remain the plurality, but diversity is growing",
-    x = "Number of Students",
-    y = NULL
+    title = "Rural Division Enrollment Decline",
+    subtitle = "Southwest Virginia continues to lose students",
+    x = "School Year",
+    y = "Enrollment",
+    color = "Division"
   )
 ```
 
 ------------------------------------------------------------------------
 
-## 5. Loudoun County is Virginia’s growth engine
+## 4. Virginia’s Demographic Transformation
 
-Loudoun County has been among the fastest-growing school divisions in
-the state, driven by data center development and suburban expansion.
-
-``` r
-growth_divisions <- enr |>
-  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         end_year %in% c(2016, 2024)) |>
-  group_by(district_name) |>
-  filter(n() == 2) |>
-  summarize(
-    y2016 = n_students[end_year == 2016],
-    y2024 = n_students[end_year == 2024],
-    change = y2024 - y2016,
-    pct_change = round((y2024 / y2016 - 1) * 100, 1),
-    .groups = "drop"
-  ) |>
-  filter(y2016 > 10000) |>
-  arrange(desc(pct_change)) |>
-  head(10)
-
-growth_divisions |>
-  mutate(district_name = forcats::fct_reorder(district_name, pct_change)) |>
-  ggplot(aes(x = pct_change, y = district_name)) +
-  geom_col(fill = "#4CAF50") +
-  geom_text(aes(label = paste0(pct_change, "%")), hjust = -0.1) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(
-    title = "Fastest-Growing Virginia School Divisions (2016-2024)",
-    subtitle = "Among divisions with 10,000+ students in 2016",
-    x = "Percent Change",
-    y = NULL
-  )
-```
-
-------------------------------------------------------------------------
-
-## 6. COVID caused a temporary dip
-
-Virginia enrollment dipped during the 2020-21 school year but has
-largely recovered.
+Virginia is becoming increasingly diverse. Hispanic students are the
+fastest-growing demographic group.
 
 ``` r
-covid <- enr |>
-  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL",
-         end_year >= 2019) |>
-  select(end_year, n_students) |>
-  mutate(change = n_students - lag(n_students))
+enr <- fetch_enr_multi(2016:2024, use_cache = TRUE)
 
-covid
-```
-
-------------------------------------------------------------------------
-
-## 7. Hispanic enrollment has surged
-
-Hispanic students are the fastest-growing demographic group in Virginia
-schools.
-
-``` r
-hispanic_trend <- enr |>
+fetch_enr_multi(c(2016, 2023), use_cache = TRUE) |>
   filter(is_state, grade_level == "TOTAL",
-         subgroup %in% c("hispanic", "white", "black", "asian")) |>
+         subgroup %in% c("white", "black", "hispanic", "asian")) |>
+  select(end_year, subgroup, n_students, pct)
+```
+
+``` r
+demo_trend <- enr |>
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("white", "black", "hispanic", "asian")) |>
   select(end_year, subgroup, n_students)
 
-hispanic_trend |>
-  ggplot(aes(x = end_year, y = n_students, color = subgroup)) +
+ggplot(demo_trend, aes(x = end_year, y = n_students, color = subgroup)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2) +
   scale_y_continuous(labels = scales::comma) +
@@ -223,67 +155,326 @@ hispanic_trend |>
 
 ------------------------------------------------------------------------
 
-## 8. Some rural divisions are declining
+## 5. The COVID Dip
 
-While Northern Virginia grows, many rural divisions in Southwest
-Virginia and the Southside have seen enrollment declines.
+Virginia lost students between 2019 and 2021. Enrollment has partially
+recovered but remains below pre-pandemic levels.
 
 ``` r
-declining <- enr |>
-  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         end_year %in% c(2016, 2024)) |>
-  group_by(district_name) |>
-  filter(n() == 2) |>
-  summarize(
-    y2016 = n_students[end_year == 2016],
-    y2024 = n_students[end_year == 2024],
-    pct_change = round((y2024 / y2016 - 1) * 100, 1),
-    .groups = "drop"
-  ) |>
-  filter(y2016 > 1000) |>
-  arrange(pct_change) |>
-  head(10)
+fetch_enr_multi(2019:2024, use_cache = TRUE) |>
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, n_students)
+```
 
-declining
+``` r
+covid <- enr |>
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL",
+         end_year >= 2019)
+
+ggplot(covid, aes(x = end_year, y = n_students)) +
+  geom_line(linewidth = 1.2, color = "#003366") +
+  geom_point(size = 3, color = "#003366") +
+  geom_vline(xintercept = 2020, linetype = "dashed", alpha = 0.5) +
+  scale_y_continuous(labels = scales::comma) +
+  annotate("text", x = 2020, y = max(covid$n_students), label = "COVID", vjust = -0.5) +
+  labs(
+    title = "Virginia Enrollment During and After COVID",
+    x = "School Year",
+    y = "Total Enrollment"
+  )
 ```
 
 ------------------------------------------------------------------------
 
-## 9. Kindergarten enrollment signals future trends
+## 6. The Charter Desert
 
-Kindergarten enrollment serves as a leading indicator of future student
-populations.
+Unlike many states, Virginia has **fewer than 10 charter schools**
+statewide, enrolling under 3,000 students. The legislature has
+historically been restrictive.
+
+``` r
+charter_data <- fetch_enr(2023, use_cache = TRUE) |>
+  filter(grepl("charter", tolower(campus_name)) | grepl("charter", tolower(district_name)),
+         subgroup == "total_enrollment", grade_level == "TOTAL")
+
+if (nrow(charter_data) > 0) {
+  charter_data |>
+    summarize(n_charter_schools = n(), total_students = sum(n_students, na.rm = TRUE))
+} else {
+  data.frame(n_charter_schools = 0, total_students = 0)
+}
+```
+
+Note: Virginia’s charter school sector is minimal compared to other
+states.
+
+------------------------------------------------------------------------
+
+## 7. The Hampton Roads Plateau
+
+Virginia Beach, Norfolk, and Newport News, once growing military hubs,
+have **flatlined for two decades**.
+
+``` r
+fetch_enr_multi(c(2016, 2024), use_cache = TRUE) |>
+  filter(is_district, grepl("Virginia Beach|Norfolk|Newport News", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, district_name, n_students)
+```
+
+``` r
+hampton <- enr |>
+  filter(is_district, grepl("Virginia Beach|Norfolk|Newport News", district_name, ignore.case = TRUE),
+         subgroup == "total_enrollment", grade_level == "TOTAL")
+
+ggplot(hampton, aes(x = end_year, y = n_students, color = district_name)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Hampton Roads Enrollment Trends",
+    subtitle = "Military corridor enrollment has plateaued",
+    x = "School Year",
+    y = "Enrollment",
+    color = "Division"
+  )
+```
+
+------------------------------------------------------------------------
+
+## 8. Kindergarten as Crystal Ball
+
+Kindergarten enrollment predicts the future. **Richmond City**
+kindergarten has dropped, signaling continued enrollment pressure.
+
+``` r
+fetch_enr_multi(2019:2023, use_cache = TRUE) |>
+  filter(is_district, grepl("Richmond City", district_name),
+         subgroup == "total_enrollment", grade_level == "K") |>
+  select(end_year, n_students)
+```
 
 ``` r
 k_trend <- enr |>
   filter(is_state, subgroup == "total_enrollment",
-         grade_level %in% c("K", "01", "05", "09"),
-         end_year >= 2019) |>
-  select(end_year, grade_level, n_students) |>
-  pivot_wider(names_from = grade_level, values_from = n_students)
+         grade_level %in% c("K", "01", "05", "09"))
 
-k_trend
+ggplot(k_trend, aes(x = end_year, y = n_students, color = grade_level)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Enrollment by Grade Level Over Time",
+    subtitle = "Kindergarten dips signal future enrollment trends",
+    x = "School Year",
+    y = "Enrollment",
+    color = "Grade"
+  )
 ```
 
 ------------------------------------------------------------------------
 
-## 10. Virginia’s 132 divisions create local variation
+## 9. The Wealthiest Division in Virginia
 
-Virginia’s school division structure – based on cities and counties –
-creates significant variation in size and demographics.
+**Falls Church City**, a tiny independent city in Northern Virginia, is
+100% in Fairfax County but operates its own schools. Median income:
+\$150,000+.
 
 ``` r
-division_stats <- enr_2024 |>
+fetch_enr(2023, use_cache = TRUE) |>
+  filter(is_district, grepl("Falls Church", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(district_name, n_students)
+```
+
+------------------------------------------------------------------------
+
+## 10. 9 Years of VDOE Data
+
+This package provides **9 years** of Virginia enrollment data from the
+VDOE School Quality Profiles (2016-2024).
+
+``` r
+# Years available
+get_available_years()
+```
+
+``` r
+# Count divisions over time
+fetch_enr_multi(c(2016, 2020, 2024), use_cache = TRUE) |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
-  summarize(
-    n_divisions = n_distinct(district_name),
-    total_students = sum(n_students, na.rm = TRUE),
-    median_size = median(n_students, na.rm = TRUE),
-    min_size = min(n_students, na.rm = TRUE),
-    max_size = max(n_students, na.rm = TRUE)
+  group_by(end_year) |>
+  summarize(n_divisions = n(), total_students = sum(n_students, na.rm = TRUE))
+```
+
+------------------------------------------------------------------------
+
+## 11. Richmond City’s Enrollment Pressure
+
+**Richmond City Public Schools** has lost students steadily, with
+enrollment dropping from 24,000 to under 22,000 since 2016.
+
+``` r
+fetch_enr_multi(2016:2024, use_cache = TRUE) |>
+  filter(is_district, grepl("Richmond City", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  select(end_year, n_students)
+```
+
+``` r
+richmond <- enr |>
+  filter(is_district, grepl("Richmond City", district_name),
+         subgroup == "total_enrollment", grade_level == "TOTAL")
+
+ggplot(richmond, aes(x = end_year, y = n_students)) +
+  geom_line(linewidth = 1.2, color = "#B22222") +
+  geom_point(size = 3, color = "#B22222") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Richmond City Enrollment Trends",
+    subtitle = "Steady decline in enrollment",
+    x = "School Year",
+    y = "Enrollment"
+  )
+```
+
+------------------------------------------------------------------------
+
+## 12. Hampton Roads Military Corridor
+
+Virginia Beach, Norfolk, Newport News, and Hampton together educate
+**180,000+ students**, but enrollment has plateaued despite the large
+military presence.
+
+``` r
+fetch_enr_multi(c(2016, 2024), use_cache = TRUE) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Virginia Beach|Norfolk|Newport News|Hampton", district_name)) |>
+  group_by(end_year) |>
+  summarize(total = sum(n_students, na.rm = TRUE))
+```
+
+------------------------------------------------------------------------
+
+## 13. Elementary vs. High School Shifts
+
+COVID’s kindergarten dip is now visible in elementary grades, while high
+school enrollment remains stable from pre-pandemic cohorts.
+
+``` r
+fetch_enr(2024, use_cache = TRUE) |>
+  filter(is_state, subgroup == "total_enrollment",
+         grade_level %in% c("K", "01", "09", "12")) |>
+  select(grade_level, n_students)
+```
+
+``` r
+grade_dist <- enr |>
+  filter(is_state, subgroup == "total_enrollment",
+         grade_level %in% c("K", "01", "05", "09", "12"))
+
+ggplot(grade_dist, aes(x = end_year, y = n_students, color = grade_level)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Enrollment by Grade Level Over Time",
+    subtitle = "Elementary grades showing COVID impact",
+    x = "School Year",
+    y = "Enrollment",
+    color = "Grade"
+  )
+```
+
+------------------------------------------------------------------------
+
+## 14. Southwest Virginia Coalfield Decline
+
+The **coalfield counties** (Buchanan, Dickenson, Wise, Lee, Tazewell)
+have lost 20%+ of students since 2016 as the coal economy continues to
+decline.
+
+``` r
+fetch_enr_multi(c(2016, 2024), use_cache = TRUE) |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Buchanan|Dickenson|Wise|Lee|Tazewell", district_name)) |>
+  group_by(end_year) |>
+  summarize(total = sum(n_students, na.rm = TRUE))
+```
+
+``` r
+coalfield <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell", district_name, ignore.case = TRUE))
+
+coalfield_total <- coalfield |>
+  group_by(end_year) |>
+  summarize(total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+ggplot(coalfield_total, aes(x = end_year, y = total)) +
+  geom_line(linewidth = 1.2, color = "#8B4513") +
+  geom_point(size = 3, color = "#8B4513") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Southwest Virginia Coalfield Region Enrollment",
+    subtitle = "Buchanan, Dickenson, Wise, Lee, and Tazewell counties",
+    x = "School Year",
+    y = "Total Enrollment"
+  )
+```
+
+------------------------------------------------------------------------
+
+## 15. The Two Virginias
+
+Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has
+**grown** since 2016 while Southwest Virginia has **declined**. These
+diverging trajectories represent two different futures.
+
+``` r
+# Northern Virginia
+nova <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Fairfax|Loudoun|Prince William|Arlington", district_name, ignore.case = TRUE)) |>
+  group_by(end_year) |>
+  summarize(nova_total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+# Southwest Virginia
+swva <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington", district_name, ignore.case = TRUE)) |>
+  group_by(end_year) |>
+  summarize(swva_total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+# Combine and calculate indexed values (2016 = 100)
+comparison <- nova |>
+  left_join(swva, by = "end_year") |>
+  mutate(
+    nova_idx = round(nova_total / nova_total[end_year == min(end_year)] * 100, 1),
+    swva_idx = round(swva_total / swva_total[end_year == min(end_year)] * 100, 1)
   )
 
-division_stats
+comparison |> select(end_year, nova_idx, swva_idx)
+```
+
+``` r
+comparison_long <- comparison |>
+  select(end_year, nova_idx, swva_idx) |>
+  pivot_longer(cols = c(nova_idx, swva_idx), names_to = "region", values_to = "index") |>
+  mutate(region = ifelse(region == "nova_idx", "Northern Virginia", "Southwest Virginia"))
+
+ggplot(comparison_long, aes(x = end_year, y = index, color = region)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 100, linetype = "dashed", alpha = 0.5) +
+  scale_color_manual(values = c("Northern Virginia" = "#003366", "Southwest Virginia" = "#8B4513")) +
+  labs(
+    title = "The Two Virginias: Diverging Trajectories",
+    subtitle = "Enrollment indexed to 2016 baseline (100)",
+    x = "School Year",
+    y = "Index (2016 = 100)",
+    color = "Region"
+  )
 ```
 
 ------------------------------------------------------------------------
@@ -298,11 +489,34 @@ Virginia’s school enrollment data reveals:
   increasing
 - **Rural decline**: Many small divisions in rural areas are losing
   students
-- **COVID recovery**: Enrollment has rebounded after the pandemic dip
+- **COVID recovery**: Enrollment has partially rebounded after the
+  pandemic dip
 - **Local variation**: 132 divisions create a wide range of school
   system sizes
+- **Two Virginias**: Growing NoVA vs. declining Southwest create
+  diverging trajectories
 
 These patterns shape education policy across the Commonwealth.
+
+------------------------------------------------------------------------
+
+## Data Notes
+
+**Data source**: Virginia Department of Education (VDOE) School Quality
+Profiles
+
+**Available years**: 2016-2024 (9 years)
+
+**Entities**: State, 132 school divisions, ~2,100 schools
+
+**Subgroups**: Total enrollment, race/ethnicity (white, black, Hispanic,
+Asian, multiracial, Native American, Pacific Islander), gender,
+economically disadvantaged, students with disabilities, English learners
+
+**Suppression**: Small counts may be suppressed for student privacy
+
+**Census Day**: Fall membership count (typically late September/early
+October)
 
 ------------------------------------------------------------------------
 

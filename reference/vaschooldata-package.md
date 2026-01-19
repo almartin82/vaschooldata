@@ -64,27 +64,26 @@ Institute, etc.).
 
 ## Data Availability
 
-- Years: 1987-2023 (37 years)
+- Years: 2016-2024 (9 years from VDOE School Quality Profiles)
 
-- Aggregation levels: Division (District), School
+- Aggregation levels: State, Division (District), School
 
-- Demographics: Race/ethnicity (varies by era), Sex
+- Demographics: Race/ethnicity (7 categories), Sex, Economically
+  Disadvantaged, etc.
 
-- Grade levels: PK through 12, plus ungraded
+- Grade levels: PK through 12, plus ungraded and TOTAL
 
-## Format Eras
+## Demographics
 
-- Pre-1998 (1987-1997):
+VDOE provides enrollment data broken down by:
 
-  Limited demographics; 5 race categories
+- Race/ethnicity: White, Black, Hispanic, Asian, Native American,
+  Pacific Islander, Multiracial
 
-- 5-Race Era (1998-2010):
+- Gender: Male, Female
 
-  White, Black, Hispanic, Asian/Pacific Islander, American Indian
-
-- 7-Race Era (2011-2023):
-
-  Added Pacific Islander (separate), Two or More Races
+- Special populations: Economically Disadvantaged, Students with
+  Disabilities, English Learners
 
 ## See also
 
