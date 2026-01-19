@@ -55,19 +55,20 @@ Note: This package does NOT use federal data sources (NCES, Urban Institute, etc
 \section{Data Availability}{
 
 \itemize{
-\item Years: 1987-2023 (37 years)
-\item Aggregation levels: Division (District), School
-\item Demographics: Race/ethnicity (varies by era), Sex
-\item Grade levels: PK through 12, plus ungraded
+\item Years: 2016-2024 (9 years from VDOE School Quality Profiles)
+\item Aggregation levels: State, Division (District), School
+\item Demographics: Race/ethnicity (7 categories), Sex, Economically Disadvantaged, etc.
+\item Grade levels: PK through 12, plus ungraded and TOTAL
 }
 }
 
-\section{Format Eras}{
+\section{Demographics}{
 
-\describe{
-\item{Pre-1998 (1987-1997)}{Limited demographics; 5 race categories}
-\item{5-Race Era (1998-2010)}{White, Black, Hispanic, Asian/Pacific Islander, American Indian}
-\item{7-Race Era (2011-2023)}{Added Pacific Islander (separate), Two or More Races}
+VDOE provides enrollment data broken down by:
+\itemize{
+\item Race/ethnicity: White, Black, Hispanic, Asian, Native American, Pacific Islander, Multiracial
+\item Gender: Male, Female
+\item Special populations: Economically Disadvantaged, Students with Disabilities, English Learners
 }
 }
 
