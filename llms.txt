@@ -147,6 +147,9 @@ if (nrow(charter_data) > 0) {
 }
 ```
 
+    #>   n_charter_schools total_students
+    #> 1                 0              0
+
 ------------------------------------------------------------------------
 
 ### 7. The Hampton Roads Plateau
@@ -200,6 +203,11 @@ fetch_enr(2023, use_cache = TRUE) |>
   select(district_name, n_students)
 ```
 
+    #> # A tibble: 1 x 2
+    #>   district_name                    n_students
+    #>   <chr>                                 <dbl>
+    #> 1 FALLS CHURCH CITY PUBLIC SCHOOLS       2496
+
 ------------------------------------------------------------------------
 
 ### 10. 9 Years of VDOE Data
@@ -212,6 +220,8 @@ VDOE School Quality Profiles (2016-2024).
 get_available_years()
 ```
 
+    #> [1] 2016 2017 2018 2019 2020 2021 2022 2023 2024
+
 ``` r
 # Count divisions over time
 fetch_enr_multi(c(2016, 2020, 2024), use_cache = TRUE) |>
@@ -219,6 +229,13 @@ fetch_enr_multi(c(2016, 2020, 2024), use_cache = TRUE) |>
   group_by(end_year) |>
   summarize(n_divisions = n(), total_students = sum(n_students, na.rm = TRUE))
 ```
+
+    #> # A tibble: 3 x 3
+    #>   end_year n_divisions total_students
+    #>      <int>       <int>          <dbl>
+    #> 1     2016         132        1271801
+    #> 2     2020         132        1249026
+    #> 3     2024         132        1261962
 
 ------------------------------------------------------------------------
 
@@ -304,9 +321,43 @@ Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has
 diverging trajectories represent two different futures.
 
 ``` r
-# Northern Virginia vs Southwest Virginia indexed to 2016
-# See vignette for full code
+# Northern Virginia
+nova <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Fairfax|Loudoun|Prince William|Arlington", district_name, ignore.case = TRUE)) |>
+  group_by(end_year) |>
+  summarize(nova_total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+# Southwest Virginia
+swva <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington", district_name, ignore.case = TRUE)) |>
+  group_by(end_year) |>
+  summarize(swva_total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+# Combine and calculate indexed values (2016 = 100)
+comparison <- nova |>
+  left_join(swva, by = "end_year") |>
+  mutate(
+    nova_idx = round(nova_total / nova_total[end_year == min(end_year)] * 100, 1),
+    swva_idx = round(swva_total / swva_total[end_year == min(end_year)] * 100, 1)
+  )
+
+comparison |> select(end_year, nova_idx, swva_idx)
 ```
+
+    #> # A tibble: 9 x 3
+    #>   end_year nova_idx swva_idx
+    #>      <int>    <dbl>    <dbl>
+    #> 1     2016    100      100
+    #> 2     2017    101.     98.1
+    #> 3     2018    102.     96.4
+    #> 4     2019    103.     94.2
+    #> 5     2020    102.     91.8
+    #> 6     2021    101.     89.7
+    #> 7     2022    102.     87.9
+    #> 8     2023    101.     86.3
+    #> 9     2024    101.     84.8
 
 ![Two Virginias diverging
 trajectories](https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/two-virginias-chart-1.png)
