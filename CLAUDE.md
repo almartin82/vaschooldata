@@ -81,6 +81,27 @@ See `state-schooldata/CLAUDE.md` for complete testing framework documentation.
 
 ---
 
+## Valid Filter Values (tidy enrollment via `fetch_enr(tidy = TRUE)`)
+
+### subgroup
+`total_enrollment`, `white`, `black`, `hispanic`, `asian`, `native_american`, `pacific_islander`, `multiracial`, `male`, `female`
+
+**NOT in tidy enrollment:** No special population subgroups (`special_ed`, `lep`, `econ_disadv`) in Virginia tidy enrollment. Those may be available through separate VDOE data sources.
+
+### grade_level
+`PK`, `K`, `01`-`12`, `UG`, `TOTAL`
+
+Grade aggregates from `enr_grade_aggs()`: `K8`, `HS`, `K12`
+
+**Virginia-specific:** `UG` (Ungraded) is a grade level present in Virginia data. Raw data uses various naming patterns (e.g., `pk`, `prek`, `kindergarten`, `g01`-`g12`). These are all normalized in the grade_level_map. Always filter on the mapped values.
+
+### entity flags
+`is_state`, `is_district`, `is_campus`, `is_charter`
+
+Determined by the `type` column: `"State"`, `"District"`, `"Campus"`. Charter status via `charter_flag` column (`"Y"` = charter).
+
+---
+
 ## README Images from Vignettes (REQUIRED)
 
 **NEVER use `man/figures/` or `generate_readme_figs.R` for README images.**
