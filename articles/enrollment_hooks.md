@@ -18,8 +18,8 @@ surfacing key trends and demographic patterns across 9 years of data
 ## 1. The Northern Virginia Boom
 
 While most of Virginia holds steady, **Loudoun County** has exploded.
-From 52,000 students in 2010 to over 82,000 today, it is now Virginia’s
-4th-largest division.
+From about 75,000 students in 2016 to over 82,000 today, it is now
+Virginia’s 3rd-largest division.
 
 ``` r
 # Loudoun's explosive growth
@@ -33,6 +33,8 @@ fetch_enr_multi(2016:2023, use_cache = TRUE) |>
 loudoun <- fetch_enr_multi(2016:2024, use_cache = TRUE) |>
   filter(is_district, grepl("Loudoun", district_name),
          subgroup == "total_enrollment", grade_level == "TOTAL")
+
+stopifnot(nrow(loudoun) > 0)
 
 ggplot(loudoun, aes(x = end_year, y = n_students)) +
   geom_line(linewidth = 1.2, color = "#003366") +
@@ -71,6 +73,8 @@ top_10 <- enr_2024 |>
   head(10) |>
   select(district_name, n_students)
 
+stopifnot(nrow(top_10) > 0)
+
 top_10 |>
   mutate(district_name = forcats::fct_reorder(district_name, n_students)) |>
   ggplot(aes(x = n_students, y = district_name)) +
@@ -103,6 +107,8 @@ fetch_enr_multi(c(2016, 2023), use_cache = TRUE) |>
 rural <- fetch_enr_multi(2016:2024, use_cache = TRUE) |>
   filter(is_district, grepl("Lee County|Dickenson", district_name, ignore.case = TRUE),
          subgroup == "total_enrollment", grade_level == "TOTAL")
+
+stopifnot(nrow(rural) > 0)
 
 ggplot(rural, aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
@@ -139,6 +145,8 @@ demo_trend <- enr |>
          subgroup %in% c("white", "black", "hispanic", "asian")) |>
   select(end_year, subgroup, n_students)
 
+stopifnot(nrow(demo_trend) > 0)
+
 ggplot(demo_trend, aes(x = end_year, y = n_students, color = subgroup)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2) +
@@ -171,6 +179,8 @@ covid <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL",
          end_year >= 2019)
 
+stopifnot(nrow(covid) > 0)
+
 ggplot(covid, aes(x = end_year, y = n_students)) +
   geom_line(linewidth = 1.2, color = "#003366") +
   geom_point(size = 3, color = "#003366") +
@@ -194,13 +204,14 @@ historically been restrictive.
 
 ``` r
 charter_data <- fetch_enr(2023, use_cache = TRUE) |>
-  filter(grepl("charter", tolower(campus_name)) | grepl("charter", tolower(district_name)),
+  filter(is_charter | grepl("charter", tolower(campus_name)),
          subgroup == "total_enrollment", grade_level == "TOTAL")
 
 if (nrow(charter_data) > 0) {
   charter_data |>
     summarize(n_charter_schools = n(), total_students = sum(n_students, na.rm = TRUE))
 } else {
+  cat("Virginia has virtually no charter school enrollment in the VDOE data.\n")
   data.frame(n_charter_schools = 0, total_students = 0)
 }
 ```
@@ -226,6 +237,8 @@ fetch_enr_multi(c(2016, 2024), use_cache = TRUE) |>
 hampton <- enr |>
   filter(is_district, grepl("Virginia Beach|Norfolk|Newport News", district_name, ignore.case = TRUE),
          subgroup == "total_enrollment", grade_level == "TOTAL")
+
+stopifnot(nrow(hampton) > 0)
 
 ggplot(hampton, aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
@@ -258,6 +271,8 @@ fetch_enr_multi(2019:2023, use_cache = TRUE) |>
 k_trend <- enr |>
   filter(is_state, subgroup == "total_enrollment",
          grade_level %in% c("K", "01", "05", "09"))
+
+stopifnot(nrow(k_trend) > 0)
 
 ggplot(k_trend, aes(x = end_year, y = n_students, color = grade_level)) +
   geom_line(linewidth = 1.2) +
@@ -297,6 +312,7 @@ VDOE School Quality Profiles (2016-2024).
 ``` r
 # Years available
 get_available_years()
+#> [1] 2016 2017 2018 2019 2020 2021 2022 2023 2024
 ```
 
 ``` r
@@ -325,6 +341,8 @@ fetch_enr_multi(2016:2024, use_cache = TRUE) |>
 richmond <- enr |>
   filter(is_district, grepl("Richmond City", district_name),
          subgroup == "total_enrollment", grade_level == "TOTAL")
+
+stopifnot(nrow(richmond) > 0)
 
 ggplot(richmond, aes(x = end_year, y = n_students)) +
   geom_line(linewidth = 1.2, color = "#B22222") +
@@ -373,6 +391,8 @@ grade_dist <- enr |>
   filter(is_state, subgroup == "total_enrollment",
          grade_level %in% c("K", "01", "05", "09", "12"))
 
+stopifnot(nrow(grade_dist) > 0)
+
 ggplot(grade_dist, aes(x = end_year, y = n_students, color = grade_level)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2) +
@@ -407,6 +427,8 @@ coalfield <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell", district_name, ignore.case = TRUE))
 
+stopifnot(nrow(coalfield) > 0)
+
 coalfield_total <- coalfield |>
   group_by(end_year) |>
   summarize(total = sum(n_students, na.rm = TRUE), .groups = "drop")
@@ -432,19 +454,25 @@ Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has
 diverging trajectories represent two different futures.
 
 ``` r
+enr_all <- fetch_enr_multi(2016:2024, use_cache = TRUE)
+
 # Northern Virginia
-nova <- enr |>
+nova <- enr_all |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Fairfax|Loudoun|Prince William|Arlington", district_name, ignore.case = TRUE)) |>
   group_by(end_year) |>
   summarize(nova_total = sum(n_students, na.rm = TRUE), .groups = "drop")
 
+stopifnot(nrow(nova) > 0)
+
 # Southwest Virginia
-swva <- enr |>
+swva <- enr_all |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington", district_name, ignore.case = TRUE)) |>
   group_by(end_year) |>
   summarize(swva_total = sum(n_students, na.rm = TRUE), .groups = "drop")
+
+stopifnot(nrow(swva) > 0)
 
 # Combine and calculate indexed values (2016 = 100)
 comparison <- nova |>
@@ -462,6 +490,8 @@ comparison_long <- comparison |>
   select(end_year, nova_idx, swva_idx) |>
   pivot_longer(cols = c(nova_idx, swva_idx), names_to = "region", values_to = "index") |>
   mutate(region = ifelse(region == "nova_idx", "Northern Virginia", "Southwest Virginia"))
+
+stopifnot(nrow(comparison_long) > 0)
 
 ggplot(comparison_long, aes(x = end_year, y = index, color = region)) +
   geom_line(linewidth = 1.2) +
@@ -503,20 +533,68 @@ These patterns shape education policy across the Commonwealth.
 ## Data Notes
 
 **Data source**: Virginia Department of Education (VDOE) School Quality
-Profiles
+Profiles (enrollment) and VDOE Open Data Portal (graduation rates)
 
-**Available years**: 2016-2024 (9 years)
+**Available years**: 2016-2024 enrollment (9 years); 2019-2023
+graduation rates (5 years)
 
 **Entities**: State, 132 school divisions, ~2,100 schools
 
 **Subgroups**: Total enrollment, race/ethnicity (white, black, Hispanic,
-Asian, multiracial, Native American, Pacific Islander), gender,
-economically disadvantaged, students with disabilities, English learners
+Asian, multiracial, Native American, Pacific Islander), gender
 
 **Suppression**: Small counts may be suppressed for student privacy
 
 **Census Day**: Fall membership count (typically late September/early
 October)
+
+**CAPTCHA note**: VDOE’s School Quality Profiles site occasionally
+requires CAPTCHA verification, which blocks programmatic downloads. When
+this happens, use `use_cache = TRUE` (default) to rely on locally cached
+data. If no cache exists, you can download files manually from the [VDOE
+enrollment
+page](https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics)
+and use
+[`fetch_enr_local()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_local.md)
+to import them.
+
+------------------------------------------------------------------------
+
+## Graduation Rate Data
+
+Virginia graduation rate data is available from the VDOE Open Data
+Portal (2019-2023).
+
+``` r
+# Get 2023 graduation rates (2022-23 school year)
+grad <- fetch_graduation(2023, use_cache = TRUE)
+
+# Statewide graduation rate
+grad |>
+  filter(is_state, diploma_type == "all") |>
+  select(graduation_rate, cohort_size)
+#> # A tibble: 1 × 2
+#>   graduation_rate cohort_size
+#>             <dbl>       <int>
+#> 1           0.919       98927
+```
+
+``` r
+# Compare schools
+grad |>
+  filter(is_school, diploma_type == "all") |>
+  arrange(desc(graduation_rate)) |>
+  select(school_name, graduation_rate, cohort_size) |>
+  head(5)
+#> # A tibble: 5 × 3
+#>   school_name                                      graduation_rate cohort_size
+#>   <chr>                                                      <dbl>       <int>
+#> 1 Thomas Jefferson High for Science and Technology               1         459
+#> 2 Grayson County High                                            1         116
+#> 3 Achievable Dream Middle/High                                   1          47
+#> 4 Open High                                                      1          46
+#> 5 Richmond Community High                                        1          40
+```
 
 ------------------------------------------------------------------------
 
@@ -528,4 +606,42 @@ October)
 
 ``` r
 sessionInfo()
+#> R version 4.5.2 (2025-10-31)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.3 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] ggplot2_4.0.2      tidyr_1.3.2        dplyr_1.2.0        vaschooldata_0.1.0
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] rappdirs_0.3.4     sass_0.4.10        utf8_1.2.6         generics_0.1.4    
+#>  [5] stringi_1.8.7      hms_1.1.4          digest_0.6.39      magrittr_2.0.4    
+#>  [9] evaluate_1.0.5     grid_4.5.2         RColorBrewer_1.1-3 fastmap_1.2.0     
+#> [13] jsonlite_2.0.0     httr_1.4.8         purrr_1.2.1        scales_1.4.0      
+#> [17] codetools_0.2-20   textshaping_1.0.4  jquerylib_0.1.4    cli_3.6.5         
+#> [21] rlang_1.1.7        crayon_1.5.3       bit64_4.6.0-1      withr_3.0.2       
+#> [25] cachem_1.1.0       yaml_2.3.12        tools_4.5.2        parallel_4.5.2    
+#> [29] tzdb_0.5.0         curl_7.0.0         vctrs_0.7.1        R6_2.6.1          
+#> [33] lifecycle_1.0.5    stringr_1.6.0      fs_1.6.6           bit_4.6.0         
+#> [37] vroom_1.7.0        ragg_1.5.0         pkgconfig_2.0.3    desc_1.4.3        
+#> [41] pkgdown_2.2.0      pillar_1.11.1      bslib_0.10.0       gtable_0.3.6      
+#> [45] glue_1.8.0         systemfonts_1.3.1  xfun_0.56          tibble_3.3.1      
+#> [49] tidyselect_1.2.1   knitr_1.51         farver_2.1.2       htmltools_0.5.9   
+#> [53] rmarkdown_2.30     readr_2.2.0        compiler_4.5.2     S7_0.2.1
 ```

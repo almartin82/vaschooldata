@@ -72,7 +72,7 @@
 <div class="section level3">
 <h3 id="id_1-the-northern-virginia-boom">1. The Northern Virginia Boom<a class="anchor" aria-label="anchor" href="#id_1-the-northern-virginia-boom"></a>
 </h3>
-<p>While most of Virginia holds steady, <strong>Loudoun County</strong> has exploded. From 52,000 students in 2016 to over 82,000 today, it is now Virginia’s 4th-largest division.</p>
+<p>While most of Virginia holds steady, <strong>Loudoun County</strong> has exploded. From about 75,000 students in 2016 to over 82,000 today, it is now Virginia’s 3rd-largest division.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/vaschooldata">vaschooldata</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
@@ -150,16 +150,18 @@
 <p>Unlike many states, Virginia has <strong>fewer than 10 charter schools</strong> statewide. The legislature has historically been restrictive.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">charter_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"charter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">campus_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"charter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_charter</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"charter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">campus_name</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">charter_data</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">charter_data</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n_charter_schools <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>, total_students <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Virginia has virtually no charter school enrollment in the VDOE data.\n"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>n_charter_schools <span class="op">=</span> <span class="fl">0</span>, total_students <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt;   n_charter_schools total_students</span></span>
+<pre><code><span><span class="co">#&gt; Virginia has virtually no charter school enrollment in the VDOE data.</span></span>
+<span><span class="co">#&gt;   n_charter_schools total_students</span></span>
 <span><span class="co">#&gt; 1                 0              0</span></span></code></pre>
 <hr>
 </div>
@@ -288,15 +290,17 @@
 </h3>
 <p>Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has <strong>grown</strong> since 2016 while Southwest Virginia has <strong>declined</strong>. These diverging trajectories represent two different futures.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Northern Virginia</span></span>
-<span><span class="va">nova</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">enr_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2016</span><span class="op">:</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Northern Virginia</span></span>
+<span><span class="va">nova</span> <span class="op">&lt;-</span> <span class="va">enr_all</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
 <span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Fairfax|Loudoun|Prince William|Arlington"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>nova_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Southwest Virginia</span></span>
-<span><span class="va">swva</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span><span class="va">swva</span> <span class="op">&lt;-</span> <span class="va">enr_all</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
 <span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -385,19 +389,31 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get 2023 graduation rates (2022-23 school year)</span></span>
-<span><span class="va">grad</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_graduation.html">fetch_graduation</a></span><span class="op">(</span><span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="va">grad</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_graduation.html">fetch_graduation</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Statewide graduation rate</span></span>
 <span><span class="va">grad</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compare schools</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 1 x 2</span></span>
+<span><span class="co">#&gt;   graduation_rate cohort_size</span></span>
+<span><span class="co">#&gt;             &lt;dbl&gt;       &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1           0.919       98927</span></span></code></pre>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compare schools</span></span>
 <span><span class="va">grad</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">graduation_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 3</span></span>
+<span><span class="co">#&gt;   school_name                                      graduation_rate cohort_size</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                                                      &lt;dbl&gt;       &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1 Thomas Jefferson High for Science and Technology               1         459</span></span>
+<span><span class="co">#&gt; 2 Grayson County High                                            1         116</span></span>
+<span><span class="co">#&gt; 3 Achievable Dream Middle/High                                   1          47</span></span>
+<span><span class="co">#&gt; 4 Open High                                                      1          46</span></span>
+<span><span class="co">#&gt; 5 Richmond Community High                                        1          40</span></span></code></pre>
 <p><strong>Years available:</strong> 2019-2023 (5 years) <strong>Data source:</strong> VDOE Cohort Graduation and Dropout Report <strong>Rate types:</strong> 4-year, 5-year graduation rates <strong>Diploma types:</strong> Advanced Studies, Standard, IB, GED, Certificate, Applied Studies</p>
 </div>
 <div class="section level2">
@@ -458,12 +474,13 @@
 <div class="section level2">
 <h2 id="data-notes">Data Notes<a class="anchor" aria-label="anchor" href="#data-notes"></a>
 </h2>
-<p><strong>Data source:</strong> Virginia Department of Education (VDOE) School Quality Profiles</p>
-<p><strong>Available years:</strong> 2016-2024 (9 years)</p>
+<p><strong>Data source:</strong> Virginia Department of Education (VDOE) School Quality Profiles (enrollment) and VDOE Open Data Portal (graduation rates)</p>
+<p><strong>Available years:</strong> 2016-2024 enrollment (9 years); 2019-2023 graduation rates (5 years)</p>
 <p><strong>Entities:</strong> State, 132 school divisions, ~2,100 schools</p>
-<p><strong>Subgroups:</strong> Total enrollment, race/ethnicity (white, black, Hispanic, Asian, multiracial, Native American, Pacific Islander), gender, economically disadvantaged, students with disabilities, English learners</p>
+<p><strong>Subgroups:</strong> Total enrollment, race/ethnicity (white, black, Hispanic, Asian, multiracial, Native American, Pacific Islander), gender</p>
 <p><strong>Suppression:</strong> Small counts may be suppressed for student privacy</p>
 <p><strong>Census Day:</strong> Fall membership count (typically late September/early October)</p>
+<p><strong>CAPTCHA note:</strong> VDOE’s School Quality Profiles site occasionally requires CAPTCHA verification, which blocks programmatic downloads. When this happens, use <code>use_cache = TRUE</code> (default) to rely on locally cached data. If no cache exists, you can download files manually from the <a href="https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics" class="external-link">VDOE enrollment page</a> and use <code><a href="reference/fetch_enr_local.html">fetch_enr_local()</a></code> to import them.</p>
 </div>
 <div class="section level2">
 <h2 id="enrollment-visualizations">Enrollment Visualizations<a class="anchor" aria-label="anchor" href="#enrollment-visualizations"></a>

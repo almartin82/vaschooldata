@@ -29,8 +29,8 @@ Here are fifteen stories hiding in the data:
 ### 1. The Northern Virginia Boom
 
 While most of Virginia holds steady, **Loudoun County** has exploded.
-From 52,000 students in 2016 to over 82,000 today, it is now Virginia’s
-4th-largest division.
+From about 75,000 students in 2016 to over 82,000 today, it is now
+Virginia’s 3rd-largest division.
 
 ``` r
 library(vaschooldata)
@@ -136,17 +136,19 @@ statewide. The legislature has historically been restrictive.
 
 ``` r
 charter_data <- fetch_enr(2023, use_cache = TRUE) |>
-  filter(grepl("charter", tolower(campus_name)) | grepl("charter", tolower(district_name)),
+  filter(is_charter | grepl("charter", tolower(campus_name)),
          subgroup == "total_enrollment", grade_level == "TOTAL")
 
 if (nrow(charter_data) > 0) {
   charter_data |>
     summarize(n_charter_schools = n(), total_students = sum(n_students, na.rm = TRUE))
 } else {
+  cat("Virginia has virtually no charter school enrollment in the VDOE data.\n")
   data.frame(n_charter_schools = 0, total_students = 0)
 }
 ```
 
+    #> Virginia has virtually no charter school enrollment in the VDOE data.
     #>   n_charter_schools total_students
     #> 1                 0              0
 
@@ -321,15 +323,17 @@ Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has
 diverging trajectories represent two different futures.
 
 ``` r
+enr_all <- fetch_enr_multi(2016:2024, use_cache = TRUE)
+
 # Northern Virginia
-nova <- enr |>
+nova <- enr_all |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Fairfax|Loudoun|Prince William|Arlington", district_name, ignore.case = TRUE)) |>
   group_by(end_year) |>
   summarize(nova_total = sum(n_students, na.rm = TRUE), .groups = "drop")
 
 # Southwest Virginia
-swva <- enr |>
+swva <- enr_all |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington", district_name, ignore.case = TRUE)) |>
   group_by(end_year) |>
@@ -422,13 +426,20 @@ library(vaschooldata)
 library(dplyr)
 
 # Get 2023 graduation rates (2022-23 school year)
-grad <- fetch_graduation(2023)
+grad <- fetch_graduation(2023, use_cache = TRUE)
 
 # Statewide graduation rate
 grad |>
   filter(is_state, diploma_type == "all") |>
   select(graduation_rate, cohort_size)
+```
 
+    #> # A tibble: 1 x 2
+    #>   graduation_rate cohort_size
+    #>             <dbl>       <int>
+    #> 1           0.919       98927
+
+``` r
 # Compare schools
 grad |>
   filter(is_school, diploma_type == "all") |>
@@ -436,6 +447,15 @@ grad |>
   select(school_name, graduation_rate, cohort_size) |>
   head(5)
 ```
+
+    #> # A tibble: 5 x 3
+    #>   school_name                                      graduation_rate cohort_size
+    #>   <chr>                                                      <dbl>       <int>
+    #> 1 Thomas Jefferson High for Science and Technology               1         459
+    #> 2 Grayson County High                                            1         116
+    #> 3 Achievable Dream Middle/High                                   1          47
+    #> 4 Open High                                                      1          46
+    #> 5 Richmond Community High                                        1          40
 
 **Years available:** 2019-2023 (5 years) **Data source:** VDOE Cohort
 Graduation and Dropout Report **Rate types:** 4-year, 5-year graduation
@@ -463,20 +483,30 @@ returns tidy (long) format by default:
 ## Data Notes
 
 **Data source:** Virginia Department of Education (VDOE) School Quality
-Profiles
+Profiles (enrollment) and VDOE Open Data Portal (graduation rates)
 
-**Available years:** 2016-2024 (9 years)
+**Available years:** 2016-2024 enrollment (9 years); 2019-2023
+graduation rates (5 years)
 
 **Entities:** State, 132 school divisions, ~2,100 schools
 
 **Subgroups:** Total enrollment, race/ethnicity (white, black, Hispanic,
-Asian, multiracial, Native American, Pacific Islander), gender,
-economically disadvantaged, students with disabilities, English learners
+Asian, multiracial, Native American, Pacific Islander), gender
 
 **Suppression:** Small counts may be suppressed for student privacy
 
 **Census Day:** Fall membership count (typically late September/early
 October)
+
+**CAPTCHA note:** VDOE’s School Quality Profiles site occasionally
+requires CAPTCHA verification, which blocks programmatic downloads. When
+this happens, use `use_cache = TRUE` (default) to rely on locally cached
+data. If no cache exists, you can download files manually from the [VDOE
+enrollment
+page](https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics)
+and use
+[`fetch_enr_local()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_local.md)
+to import them.
 
 ## Enrollment Visualizations
 
