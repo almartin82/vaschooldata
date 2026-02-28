@@ -35,7 +35,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/enrollment_hooks.html">15 Insights from Virginia School Enrollment Data</a></li>
+<li><a class="dropdown-item" href="articles/enrollment_hooks.html">15 Stories from Virginia School Data</a></li>
   </ul>
 </li>
       </ul>
@@ -57,7 +57,7 @@
 <!-- badges: start -->
 
 <p><strong><a href="https://almartin82.github.io/vaschooldata/">Documentation</a></strong> | <a href="https://github.com/almartin82/vaschooldata" class="external-link">GitHub</a></p>
-<p>Fetch and analyze Virginia school enrollment data from the Virginia Department of Education (VDOE) in R or Python. Data for every school and division in Virginia.</p>
+<p>Fetch and analyze Virginia school data from the Virginia Department of Education (VDOE) in R or Python. Includes enrollment data for every school and division in Virginia (2016-2024) and graduation rates for every high school (2019-2023).</p>
 <div class="section level2">
 <h2 id="part-of-the-state-schooldata-project">Part of the State Schooldata Project<a class="anchor" aria-label="anchor" href="#part-of-the-state-schooldata-project"></a>
 </h2>
@@ -67,264 +67,525 @@
 <div class="section level2">
 <h2 id="what-can-you-find-with-vaschooldata">What can you find with vaschooldata?<a class="anchor" aria-label="anchor" href="#what-can-you-find-with-vaschooldata"></a>
 </h2>
-<p>Virginia educates <strong>1.25 million students</strong> across 132 school divisions, from the coalfields of Appalachia to the suburbs of Northern Virginia. Here are fifteen stories hiding in the data:</p>
+<p>Virginia educates nearly <strong>1.25 million students</strong> across 132 school divisions and graduates over <strong>90,000 seniors</strong> each year. This package provides 9 years of enrollment data and 5 years of graduation data directly from VDOE. Here are fifteen stories hiding in the data:</p>
 <hr>
 <div class="section level3">
-<h3 id="id_1-the-northern-virginia-boom">1. The Northern Virginia Boom<a class="anchor" aria-label="anchor" href="#id_1-the-northern-virginia-boom"></a>
+<h3 id="id_1-virginia-graduates-92-of-its-students">1. Virginia graduates 92% of its students<a class="anchor" aria-label="anchor" href="#id_1-virginia-graduates-92-of-its-students"></a>
 </h3>
-<p>While most of Virginia holds steady, <strong>Loudoun County</strong> has exploded. From 52,000 students in 2016 to over 82,000 today, it is now Virginia’s 4th-largest division.</p>
+<p>Virginia’s four-year graduation rate has held steady between 91.6% and 93.0% over five years, placing it well above the national average of roughly 87%.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/vaschooldata">vaschooldata</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Loudoun's explosive growth</span></span>
-<span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2016</span><span class="op">:</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Loudoun"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">all_grad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2023</span>, <span class="kw">function</span><span class="op">(</span><span class="va">yr</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="reference/fetch_graduation.html">fetch_graduation</a></span><span class="op">(</span><span class="va">yr</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">state_grad</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span>, <span class="va">total_graduates</span>, <span class="va">dropout_rate</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">state_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>         dropout_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">dropout_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 7</span></span>
+<span><span class="co">#&gt;   end_year graduation_rate cohort_size total_graduates dropout_rate grad_pct dropout_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;           &lt;dbl&gt;       &lt;int&gt;           &lt;int&gt;        &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019           0.916       98241           89991       0.0551     91.6        5.51</span></span>
+<span><span class="co">#&gt; 2     2020           0.925       98327           90971       0.0509     92.5        5.09</span></span>
+<span><span class="co">#&gt; 3     2021           0.930       97096           90325       0.0425     93.0        4.25</span></span>
+<span><span class="co">#&gt; 4     2022           0.922       98281           90603       0.0515     92.2        5.15</span></span>
+<span><span class="co">#&gt; 5     2023           0.919       98927           90944       0.0538     91.9        5.38</span></span></code></pre>
 <div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/loudoun-chart-1.png" alt="Loudoun County enrollment growth"><div class="figcaption">Loudoun County enrollment growth</div>
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/grad-trend-chart-1.png" alt="Virginia graduation rate trend"><div class="figcaption">Virginia graduation rate trend</div>
 </div>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="id_2-the-fairfax-giant">2. The Fairfax Giant<a class="anchor" aria-label="anchor" href="#id_2-the-fairfax-giant"></a>
+<h3 id="id_2-more-than-half-of-virginia-graduates-earn-advanced-studies-diplomas">2. More than half of Virginia graduates earn Advanced Studies diplomas<a class="anchor" aria-label="anchor" href="#id_2-more-than-half-of-virginia-graduates-earn-advanced-studies-diplomas"></a>
 </h3>
-<p><strong>Fairfax County Public Schools</strong> alone enrolls more students than 42 states’ entire charter sectors. At 180,000 students, it is the 10th-largest district in America.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/top-districts-chart-1.png" alt="Virginia’s largest divisions"><div class="figcaption">Virginia’s largest divisions</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_3-the-rural-decline">3. The Rural Decline<a class="anchor" aria-label="anchor" href="#id_3-the-rural-decline"></a>
-</h3>
-<p>While Northern Virginia grows, <strong>Southwest Virginia is vanishing</strong>. Lee County has lost 45% of its students since 2016. Dickenson County: down 40%+.</p>
+<p>In 2023, 50,175 graduates (54.6% of all diploma recipients) earned the Advanced Studies diploma, Virginia’s most rigorous option requiring additional math, science, and foreign language credits. Only 38.3% earned the Standard diploma.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2023</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Lee County|Dickenson"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">end_year</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">diplomas</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span>, <span class="va">diploma_type</span> <span class="op">!=</span> <span class="st">"all"</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">diploma_count</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">diploma_type</span>, <span class="va">diploma_count</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">diploma_count</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">diploma_count</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">diploma_count</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">diplomas</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 7 x 3</span></span>
+<span><span class="co">#&gt;   diploma_type    diploma_count   pct</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                   &lt;int&gt; &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 advanced_studies        50175  54.6</span></span>
+<span><span class="co">#&gt; 2 standard               37883  38.3</span></span>
+<span><span class="co">#&gt; 3 applied_studies         2117   2.3</span></span>
+<span><span class="co">#&gt; 4 ib                       766   0.8</span></span>
+<span><span class="co">#&gt; 5 isaep                    700   0.8</span></span>
+<span><span class="co">#&gt; 6 ged                      145   0.2</span></span>
+<span><span class="co">#&gt; 7 certificate              143   0.2</span></span></code></pre>
 <div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/rural-decline-chart-1.png" alt="Rural decline chart"><div class="figcaption">Rural decline chart</div>
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/diploma-breakdown-chart-1.png" alt="Diploma type breakdown"><div class="figcaption">Diploma type breakdown</div>
 </div>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="id_4-virginias-demographic-transformation">4. Virginia’s Demographic Transformation<a class="anchor" aria-label="anchor" href="#id_4-virginias-demographic-transformation"></a>
+<h3 id="id_3-richmond-citys-graduation-crisis">3. Richmond City’s graduation crisis<a class="anchor" aria-label="anchor" href="#id_3-richmond-citys-graduation-crisis"></a>
 </h3>
-<p>Virginia is becoming increasingly diverse. Hispanic students are the fastest-growing demographic group.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2023</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"black"</span>, <span class="st">"hispanic"</span>, <span class="st">"asian"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subgroup</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/demographics-chart-1.png" alt="Demographics chart"><div class="figcaption">Demographics chart</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_5-the-covid-dip">5. The COVID Dip<a class="anchor" aria-label="anchor" href="#id_5-the-covid-dip"></a>
-</h3>
-<p>Virginia lost students between 2019 and 2021. Enrollment has partially recovered but remains below pre-pandemic levels.</p>
+<p>Richmond City Public Schools graduates just 72% of its students, the lowest rate among Virginia’s 130 school divisions. Its dropout rate of 24% is more than four times the state average of 5.4%.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/covid-chart-1.png" alt="COVID enrollment impact"><div class="figcaption">COVID enrollment impact</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_6-the-charter-desert">6. The Charter Desert<a class="anchor" aria-label="anchor" href="#id_6-the-charter-desert"></a>
-</h3>
-<p>Unlike many states, Virginia has <strong>fewer than 10 charter schools</strong> statewide. The legislature has historically been restrictive.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">charter_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"charter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">campus_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"charter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">charter_data</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">charter_data</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n_charter_schools <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>, total_students <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>n_charter_schools <span class="op">=</span> <span class="fl">0</span>, total_students <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt;   n_charter_schools total_students</span></span>
-<span><span class="co">#&gt; 1                 0              0</span></span></code></pre>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_7-the-hampton-roads-plateau">7. The Hampton Roads Plateau<a class="anchor" aria-label="anchor" href="#id_7-the-hampton-roads-plateau"></a>
-</h3>
-<p>Virginia Beach, Norfolk, and Newport News, once growing military hubs, have <strong>flatlined for two decades</strong>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2024</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Virginia Beach|Norfolk|Newport News"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/hampton-roads-chart-1.png" alt="Hampton Roads trends"><div class="figcaption">Hampton Roads trends</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_8-kindergarten-as-crystal-ball">8. Kindergarten as Crystal Ball<a class="anchor" aria-label="anchor" href="#id_8-kindergarten-as-crystal-ball"></a>
-</h3>
-<p>Kindergarten enrollment predicts the future. <strong>Richmond City</strong> kindergarten has dropped, signaling continued enrollment pressure.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Richmond City"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"K"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/kindergarten-chart-1.png" alt="Kindergarten trends"><div class="figcaption">Kindergarten trends</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_9-the-wealthiest-division-in-virginia">9. The Wealthiest Division in Virginia<a class="anchor" aria-label="anchor" href="#id_9-the-wealthiest-division-in-virginia"></a>
-</h3>
-<p><strong>Falls Church City</strong>, a tiny independent city in Northern Virginia, is 100% in Fairfax County but operates its own schools. Median income: $150,000+.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Falls Church"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; # A tibble: 1 x 2</span></span>
-<span><span class="co">#&gt;   district_name                    n_students</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;                                 &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 FALLS CHURCH CITY PUBLIC SCHOOLS       2496</span></span></code></pre>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_10-9-years-of-vdoe-data">10. 9 Years of VDOE Data<a class="anchor" aria-label="anchor" href="#id_10-9-years-of-vdoe-data"></a>
-</h3>
-<p>This package provides <strong>9 years</strong> of Virginia enrollment data from the VDOE School Quality Profiles (2016-2024).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Years available</span></span>
-<span><span class="fu"><a href="reference/get_available_years.html">get_available_years</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; [1] 2016 2017 2018 2019 2020 2021 2022 2023 2024</span></span></code></pre>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Count divisions over time</span></span>
-<span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2020</span>, <span class="fl">2024</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n_divisions <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>, total_students <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; # A tibble: 3 x 3</span></span>
-<span><span class="co">#&gt;   end_year n_divisions total_students</span></span>
-<span><span class="co">#&gt;      &lt;int&gt;       &lt;int&gt;          &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1     2016         132        1271801</span></span>
-<span><span class="co">#&gt; 2     2020         132        1249026</span></span>
-<span><span class="co">#&gt; 3     2024         132        1261962</span></span></code></pre>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_11-richmond-citys-enrollment-pressure">11. Richmond City’s Enrollment Pressure<a class="anchor" aria-label="anchor" href="#id_11-richmond-citys-enrollment-pressure"></a>
-</h3>
-<p><strong>Richmond City Public Schools</strong> has lost students steadily, with enrollment dropping from 24,000 to under 22,000 since 2016.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2016</span><span class="op">:</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Richmond City"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/richmond-chart-1.png" alt="Richmond City enrollment trends"><div class="figcaption">Richmond City enrollment trends</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_12-hampton-roads-military-corridor">12. Hampton Roads Military Corridor<a class="anchor" aria-label="anchor" href="#id_12-hampton-roads-military-corridor"></a>
-</h3>
-<p>Virginia Beach, Norfolk, Newport News, and Hampton together educate <strong>180,000+ students</strong>, but enrollment has plateaued despite the large military presence.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2024</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Virginia Beach|Norfolk|Newport News|Hampton"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_13-elementary-vs-high-school-shifts">13. Elementary vs. High School Shifts<a class="anchor" aria-label="anchor" href="#id_13-elementary-vs-high-school-shifts"></a>
-</h3>
-<p>COVID’s kindergarten dip is now visible in elementary grades, while high school enrollment remains stable from pre-pandemic cohorts.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>,</span>
-<span>         <span class="va">grade_level</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"K"</span>, <span class="st">"01"</span>, <span class="st">"09"</span>, <span class="st">"12"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">grade_level</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/grade-distribution-chart-1.png" alt="Grade band enrollment trends"><div class="figcaption">Grade band enrollment trends</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_14-southwest-virginia-coalfield-decline">14. Southwest Virginia Coalfield Decline<a class="anchor" aria-label="anchor" href="#id_14-southwest-virginia-coalfield-decline"></a>
-</h3>
-<p>The <strong>coalfield counties</strong> (Buchanan, Dickenson, Wise, Lee, Tazewell) have lost 20%+ of students since 2016 as the coal economy continues to decline.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">2024</span><span class="op">)</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Buchanan|Dickenson|Wise|Lee|Tazewell"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/coalfield-chart-1.png" alt="Coalfield enrollment decline"><div class="figcaption">Coalfield enrollment decline</div>
-</div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="id_15-the-two-virginias">15. The Two Virginias<a class="anchor" aria-label="anchor" href="#id_15-the-two-virginias"></a>
-</h3>
-<p>Northern Virginia (Fairfax, Loudoun, Prince William, Arlington) has <strong>grown</strong> since 2016 while Southwest Virginia has <strong>declined</strong>. These diverging trajectories represent two different futures.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Northern Virginia</span></span>
-<span><span class="va">nova</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Fairfax|Loudoun|Prince William|Arlington"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>nova_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Southwest Virginia</span></span>
-<span><span class="va">swva</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Buchanan|Dickenson|Wise|Lee County|Tazewell|Russell|Scott|Smyth|Washington"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>swva_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Combine and calculate indexed values (2016 = 100)</span></span>
-<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="va">nova</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">swva</span>, by <span class="op">=</span> <span class="st">"end_year"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    nova_idx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">nova_total</span> <span class="op">/</span> <span class="va">nova_total</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span><span class="op">]</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>    swva_idx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">swva_total</span> <span class="op">/</span> <span class="va">swva_total</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span><span class="op">]</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">div_grad_23</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">division_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    n_schools <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    dropouts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">dropouts</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="va">comparison</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">nova_idx</span>, <span class="va">swva_idx</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; # A tibble: 9 x 3</span></span>
-<span><span class="co">#&gt;   end_year nova_idx swva_idx</span></span>
-<span><span class="co">#&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1     2016    100      100</span></span>
-<span><span class="co">#&gt; 2     2017    101.     98.1</span></span>
-<span><span class="co">#&gt; 3     2018    102.     96.4</span></span>
-<span><span class="co">#&gt; 4     2019    103.     94.2</span></span>
-<span><span class="co">#&gt; 5     2020    102.     91.8</span></span>
-<span><span class="co">#&gt; 6     2021    101.     89.7</span></span>
-<span><span class="co">#&gt; 7     2022    102.     87.9</span></span>
-<span><span class="co">#&gt; 8     2023    101.     86.3</span></span>
-<span><span class="co">#&gt; 9     2024    101.     84.8</span></span></code></pre>
+<span><span class="va">richmond_trend</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">division_name</span> <span class="op">==</span> <span class="st">"Richmond City"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    dropouts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">dropouts</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">richmond_trend</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 5</span></span>
+<span><span class="co">#&gt;   end_year cohort graduates dropouts grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;  &lt;int&gt;     &lt;int&gt;    &lt;int&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019   1514      1073      364     70.9</span></span>
+<span><span class="co">#&gt; 2     2020   1495      1066      350     71.3</span></span>
+<span><span class="co">#&gt; 3     2021   1472      1155      222     78.5</span></span>
+<span><span class="co">#&gt; 4     2022   1360      1008      272     74.1</span></span>
+<span><span class="co">#&gt; 5     2023   1483      1073      353     72.4</span></span></code></pre>
 <div class="float">
-<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/two-virginias-chart-1.png" alt="Two Virginias diverging trajectories"><div class="figcaption">Two Virginias diverging trajectories</div>
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/richmond-grad-chart-1.png" alt="Richmond City graduation trend"><div class="figcaption">Richmond City graduation trend</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_4-loudoun-county-leads-northern-virginia-in-graduation-rates">4. Loudoun County leads Northern Virginia in graduation rates<a class="anchor" aria-label="anchor" href="#id_4-loudoun-county-leads-northern-virginia-in-graduation-rates"></a>
+</h3>
+<p>Among NoVA’s four largest divisions, Loudoun County consistently graduates the highest share of students at 96.7%, followed by Arlington (93.5%), Fairfax (93.4%), and Prince William (91.7%).</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nova_grad</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="va">division_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Fairfax County"</span>, <span class="st">"Loudoun County"</span>,</span>
+<span>                               <span class="st">"Prince William County"</span>, <span class="st">"Arlington County"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">division_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">nova_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">grad_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 4 x 6</span></span>
+<span><span class="co">#&gt;   end_year division_name         cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;chr&gt;                  &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2023 Loudoun County          6688      6468     0.967     96.7</span></span>
+<span><span class="co">#&gt; 2     2023 Arlington County        1991      1862     0.935     93.5</span></span>
+<span><span class="co">#&gt; 3     2023 Fairfax County         14907     13923     0.934     93.4</span></span>
+<span><span class="co">#&gt; 4     2023 Prince William County   7161      6566     0.917     91.7</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/nova-grad-chart-1.png" alt="Northern Virginia graduation rates"><div class="figcaption">Northern Virginia graduation rates</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_5-covid-drove-dropout-rates-to-a-five-year-low">5. COVID drove dropout rates to a five-year low<a class="anchor" aria-label="anchor" href="#id_5-covid-drove-dropout-rates-to-a-five-year-low"></a>
+</h3>
+<p>Virginia’s dropout rate fell from 5.5% in 2019 to 4.3% in 2021, possibly reflecting emergency pandemic policies that kept students enrolled. By 2023, dropout rates had rebounded to 5.4%.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dropout_trend</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">graduation_rate</span>, <span class="va">dropout_rate</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    dropout_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">dropout_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">dropout_trend</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 4</span></span>
+<span><span class="co">#&gt;   end_year graduation_rate dropout_rate grad_pct dropout_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;           &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019           0.916       0.0551     91.6        5.51</span></span>
+<span><span class="co">#&gt; 2     2020           0.925       0.0509     92.5        5.09</span></span>
+<span><span class="co">#&gt; 3     2021           0.930       0.0425     93.0        4.25</span></span>
+<span><span class="co">#&gt; 4     2022           0.922       0.0515     92.2        5.15</span></span>
+<span><span class="co">#&gt; 5     2023           0.919       0.0538     91.9        5.38</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/covid-dropout-chart-1.png" alt="Dropout rate trend"><div class="figcaption">Dropout rate trend</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_6-thomas-jefferson-virginias-100-graduation-factory">6. Thomas Jefferson: Virginia’s 100% graduation factory<a class="anchor" aria-label="anchor" href="#id_6-thomas-jefferson-virginias-100-graduation-factory"></a>
+</h3>
+<p>Thomas Jefferson High School for Science and Technology (TJHSST) in Fairfax County has graduated 100% of its cohort for four consecutive years (2020-2023). With 459 students in its 2023 cohort, it is the largest school in Virginia with a perfect graduation rate.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tj</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Thomas Jefferson High for Science"</span>, <span class="va">school_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">school_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tj</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 4</span></span>
+<span><span class="co">#&gt;   end_year school_name                                      graduation_rate cohort_size</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;chr&gt;                                                      &lt;dbl&gt;       &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1     2019 Thomas Jefferson High for Science and Technology           0.998         427</span></span>
+<span><span class="co">#&gt; 2     2020 Thomas Jefferson High for Science and Technology           1             443</span></span>
+<span><span class="co">#&gt; 3     2021 Thomas Jefferson High for Science and Technology           1             436</span></span>
+<span><span class="co">#&gt; 4     2022 Thomas Jefferson High for Science and Technology           1             452</span></span>
+<span><span class="co">#&gt; 5     2023 Thomas Jefferson High for Science and Technology           1             459</span></span></code></pre>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">perfect</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span>,</span>
+<span>         <span class="va">graduation_rate</span> <span class="op">==</span> <span class="fl">1.0</span>, <span class="va">cohort_size</span> <span class="op">&gt;=</span> <span class="fl">30</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">cohort_size</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">perfect</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 7 x 3</span></span>
+<span><span class="co">#&gt;   school_name                                      division_name      cohort_size</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                                            &lt;chr&gt;                    &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1 Thomas Jefferson High for Science and Technology Fairfax County             459</span></span>
+<span><span class="co">#&gt; 2 Tabb High                                        York County                280</span></span>
+<span><span class="co">#&gt; 3 Grayson County High                              Grayson County             116</span></span>
+<span><span class="co">#&gt; 4 Green Run Collegiate                             Virginia Beach City         72</span></span>
+<span><span class="co">#&gt; 5 Achievable Dream Middle/High                     Newport News City           47</span></span>
+<span><span class="co">#&gt; 6 Open High                                        Richmond City               46</span></span>
+<span><span class="co">#&gt; 7 Richmond Community High                          Richmond City               40</span></span></code></pre>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_7-hampton-roads-norfolk-is-the-outlier">7. Hampton Roads: Norfolk is the outlier<a class="anchor" aria-label="anchor" href="#id_7-hampton-roads-norfolk-is-the-outlier"></a>
+</h3>
+<p>Among Hampton Roads’ five largest divisions, Norfolk City graduates just 82% of its students, lagging 10+ points behind neighbors like Hampton City (96.4%) and Virginia Beach (95.3%).</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hr_divisions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Virginia Beach City"</span>, <span class="st">"Norfolk City"</span>,</span>
+<span>                   <span class="st">"Newport News City"</span>, <span class="st">"Hampton City"</span>, <span class="st">"Chesapeake City"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hr_grad</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="va">division_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">hr_divisions</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">division_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">hr_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">grad_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 6</span></span>
+<span><span class="co">#&gt;   end_year division_name       cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;chr&gt;                &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2023 Hampton City          1461      1408     0.964     96.4</span></span>
+<span><span class="co">#&gt; 2     2023 Virginia Beach City   5111      4873     0.953     95.3</span></span>
+<span><span class="co">#&gt; 3     2023 Newport News City     1745      1645     0.943     94.3</span></span>
+<span><span class="co">#&gt; 4     2023 Chesapeake City       3294      3037     0.922     92.2</span></span>
+<span><span class="co">#&gt; 5     2023 Norfolk City          1800      1475     0.819     81.9</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/hampton-roads-grad-chart-1.png" alt="Hampton Roads graduation rates"><div class="figcaption">Hampton Roads graduation rates</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_8-southwest-virginia-coalfield-schools-defy-decline-narratives">8. Southwest Virginia coalfield schools defy decline narratives<a class="anchor" aria-label="anchor" href="#id_8-southwest-virginia-coalfield-schools-defy-decline-narratives"></a>
+</h3>
+<p>Despite losing population, Southwest Virginia’s rural schools maintain strong graduation rates. Wise County graduates 98.3% of its students, higher than Fairfax County (93.4%) or any other NoVA division.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">swva_divisions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Lee County"</span>, <span class="st">"Dickenson County"</span>, <span class="st">"Buchanan County"</span>,</span>
+<span>                     <span class="st">"Wise County"</span>, <span class="st">"Tazewell County"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">swva_grad</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="va">division_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">swva_divisions</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">division_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">swva_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">grad_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 6</span></span>
+<span><span class="co">#&gt;   end_year division_name    cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;chr&gt;             &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2023 Wise County         405       398     0.983     98.3</span></span>
+<span><span class="co">#&gt; 2     2023 Tazewell County     425       401     0.944     94.4</span></span>
+<span><span class="co">#&gt; 3     2023 Dickenson County    160       144     0.900     90.0</span></span>
+<span><span class="co">#&gt; 4     2023 Buchanan County     188       169     0.899     89.9</span></span>
+<span><span class="co">#&gt; 5     2023 Lee County          199       168     0.844     84.4</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/swva-grad-chart-1.png" alt="Southwest Virginia graduation rates"><div class="figcaption">Southwest Virginia graduation rates</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_9-virginias-largest-high-schools-are-all-in-northern-virginia">9. Virginia’s largest high schools are all in Northern Virginia<a class="anchor" aria-label="anchor" href="#id_9-virginias-largest-high-schools-are-all-in-northern-virginia"></a>
+</h3>
+<p>Alexandria City High School leads the state with 1,138 seniors in its 2023 cohort. Eight of the ten largest high schools are in Fairfax, Prince William, or Arlington counties.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">big_schools</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">cohort_size</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">cohort_size</span>, <span class="va">graduation_rate</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">big_schools</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 10 x 5</span></span>
+<span><span class="co">#&gt;    school_name                 division_name         cohort_size graduation_rate grad_pct</span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;                       &lt;chr&gt;                       &lt;int&gt;           &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 Alexandria City High School Alexandria City               1138           0.831     83.1</span></span>
+<span><span class="co">#&gt;  2 Lake Braddock Secondary     Fairfax County                 722           0.983     98.3</span></span>
+<span><span class="co">#&gt;  3 Charles J. Colgan Sr. High  Prince William County          709           0.982     98.2</span></span>
+<span><span class="co">#&gt;  4 Chantilly High              Fairfax County                 703           0.970     97.0</span></span>
+<span><span class="co">#&gt;  5 West Potomac High           Fairfax County                 694           0.955     95.5</span></span>
+<span><span class="co">#&gt;  6 Oakton High                 Fairfax County                 690           0.971     97.1</span></span>
+<span><span class="co">#&gt;  7 Washington-Liberty High     Arlington County               682           0.922     92.2</span></span>
+<span><span class="co">#&gt;  8 Yorktown High               Arlington County               678           0.979     97.9</span></span>
+<span><span class="co">#&gt;  9 Osbourn Park High           Prince William County          672           0.921     92.1</span></span>
+<span><span class="co">#&gt; 10 Unity Reed High             Prince William County          666           0.793     79.3</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/largest-schools-chart-1.png" alt="Largest Virginia high schools"><div class="figcaption">Largest Virginia high schools</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_10-virginia-loses-5300-students-to-dropout-every-year">10. Virginia loses 5,300 students to dropout every year<a class="anchor" aria-label="anchor" href="#id_10-virginia-loses-5300-students-to-dropout-every-year"></a>
+</h3>
+<p>Over the 2019-2023 period, Virginia averaged roughly 5,000 dropouts per year. The 2021 pandemic-policy dip to 4,129 was temporary; 2023 saw 5,319 dropouts.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dropout_counts</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">cohort_size</span>, <span class="va">total_graduates</span>, <span class="va">dropouts</span>, <span class="va">still_enrolled</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    dropout_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">dropouts</span> <span class="op">/</span> <span class="va">cohort_size</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    still_enrolled_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">still_enrolled</span> <span class="op">/</span> <span class="va">cohort_size</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">dropout_counts</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 7</span></span>
+<span><span class="co">#&gt;   end_year cohort_size total_graduates dropouts still_enrolled dropout_pct still_enrolled_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;       &lt;int&gt;           &lt;int&gt;    &lt;int&gt;          &lt;int&gt;       &lt;dbl&gt;              &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019       98241           89991     5410           2840         5.5                2.9</span></span>
+<span><span class="co">#&gt; 2     2020       98327           90971     5008           2348         5.1                2.4</span></span>
+<span><span class="co">#&gt; 3     2021       97096           90325     4129           2642         4.3                2.7</span></span>
+<span><span class="co">#&gt; 4     2022       98281           90603     5061           2617         5.2                2.7</span></span>
+<span><span class="co">#&gt; 5     2023       98927           90944     5319           2664         5.4                2.7</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/dropout-count-chart-1.png" alt="Non-graduates by outcome"><div class="figcaption">Non-graduates by outcome</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_11-alexandria-city-high-one-school-1138-seniors-83-graduation">11. Alexandria City High: one school, 1,138 seniors, 83% graduation<a class="anchor" aria-label="anchor" href="#id_11-alexandria-city-high-one-school-1138-seniors-83-graduation"></a>
+</h3>
+<p>Alexandria City High School is Virginia’s single largest high school by cohort, yet its 83.1% graduation rate trails the state average by nearly 9 points. As the only public high school in Alexandria City, every student funnels through one building.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">alex</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Alexandria City High"</span>, <span class="va">school_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">school_name</span>, <span class="va">cohort_size</span>, <span class="va">graduation_rate</span>, <span class="va">dropout_rate</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">alex</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 6</span></span>
+<span><span class="co">#&gt;   end_year school_name                 cohort_size graduation_rate dropout_rate grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;chr&gt;                             &lt;int&gt;           &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019 Alexandria City High School        1031           0.849       0.0981     84.9</span></span>
+<span><span class="co">#&gt; 2     2020 Alexandria City High School        1075           0.853       0.0949     85.3</span></span>
+<span><span class="co">#&gt; 3     2021 Alexandria City High School        1143           0.876       0.0665     87.6</span></span>
+<span><span class="co">#&gt; 4     2022 Alexandria City High School        1115           0.861       0.0825     86.1</span></span>
+<span><span class="co">#&gt; 5     2023 Alexandria City High School        1138           0.831       0.128      83.1</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/alexandria-chart-1.png" alt="Alexandria City High School trends"><div class="figcaption">Alexandria City High School trends</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_12-fairfax-county-alone-graduates-14000-students-per-year">12. Fairfax County alone graduates 14,000 students per year<a class="anchor" aria-label="anchor" href="#id_12-fairfax-county-alone-graduates-14000-students-per-year"></a>
+</h3>
+<p>With 14,907 seniors in its 2023 cohort across 30 high schools, Fairfax County produces more graduates than many states. Its graduation rate has climbed from 91.3% in 2019 to 93.4% in 2023.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fairfax</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>,</span>
+<span>         <span class="va">division_name</span> <span class="op">==</span> <span class="st">"Fairfax County"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    n_schools <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fairfax</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 6</span></span>
+<span><span class="co">#&gt;   end_year n_schools cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;     &lt;int&gt;  &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     2019        30  14936     13636     0.913     91.3</span></span>
+<span><span class="co">#&gt; 2     2020        30  14793     13762     0.930     93.0</span></span>
+<span><span class="co">#&gt; 3     2021        30  14641     13859     0.947     94.7</span></span>
+<span><span class="co">#&gt; 4     2022        30  14801     13921     0.941     94.1</span></span>
+<span><span class="co">#&gt; 5     2023        30  14907     13923     0.934     93.4</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/fairfax-grad-chart-1.png" alt="Fairfax County graduation trend"><div class="figcaption">Fairfax County graduation trend</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_13-the-biggest-school-level-improvements-since-2019">13. The biggest school-level improvements since 2019<a class="anchor" aria-label="anchor" href="#id_13-the-biggest-school-level-improvements-since-2019"></a>
+</h3>
+<p>Lancaster High School improved its graduation rate by 14 percentage points between 2019 and 2023 (from 83.8% to 97.8%). Armstrong High in Richmond jumped nearly 12 points.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">improvement</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">end_year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2019</span>, <span class="fl">2023</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">end_year</span>, values_from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">graduation_rate_2019</span><span class="op">)</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">graduation_rate_2023</span><span class="op">)</span>,</span>
+<span>         <span class="va">cohort_size_2023</span> <span class="op">&gt;=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">graduation_rate_2023</span> <span class="op">-</span> <span class="va">graduation_rate_2019</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">change</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">improvement</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">graduation_rate_2019</span>, <span class="va">graduation_rate_2023</span>,</span>
+<span>         <span class="va">change</span>, <span class="va">cohort_size_2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    rate_2019 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate_2019</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    rate_2023 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">graduation_rate_2023</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 10 x 8</span></span>
+<span><span class="co">#&gt;    school_name          division_name     graduation_rate_2019 graduation_rate_2023 change cohort_size_2023 rate_2019 rate_2023</span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;                &lt;chr&gt;                            &lt;dbl&gt;                &lt;dbl&gt;  &lt;dbl&gt;            &lt;int&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 Lancaster High       Lancaster County                 0.838                0.978   13.9               90      83.8      97.8</span></span>
+<span><span class="co">#&gt;  2 Armstrong High       Richmond City                    0.652                0.770   11.8              174      65.2      77.0</span></span>
+<span><span class="co">#&gt;  3 Osbourn High         Manassas City                    0.777                0.895   11.8              562      77.7      89.5</span></span>
+<span><span class="co">#&gt;  4 Amherst County High  Amherst County                   0.862                0.960    9.8              299      86.2      96.0</span></span>
+<span><span class="co">#&gt;  5 Huguenot High        Richmond City                    0.682                0.780    9.8              355      68.2      78.0</span></span>
+<span><span class="co">#&gt;  6 Rustburg High        Campbell County                  0.901                0.995    9.4              195      90.1      99.5</span></span>
+<span><span class="co">#&gt;  7 Fairfax County Adult High Fairfax County              0.069                0.153    8.4              203       6.9      15.3</span></span>
+<span><span class="co">#&gt;  8 Phoebus High         Hampton City                     0.899                0.982    8.4              283      89.9      98.2</span></span>
+<span><span class="co">#&gt;  9 West Potomac High    Fairfax County                   0.872                0.955    8.3              694      87.2      95.5</span></span>
+<span><span class="co">#&gt; 10 Brunswick High       Brunswick County                 0.800                0.881    8.1              109      80.0      88.1</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/improvements-chart-1.png" alt="Biggest graduation rate improvements"><div class="figcaption">Biggest graduation rate improvements</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_14-division-level-graduation-gap-72-to-100">14. Division-level graduation gap: 72% to 100%<a class="anchor" aria-label="anchor" href="#id_14-division-level-graduation-gap-72-to-100"></a>
+</h3>
+<p>Virginia’s 130 school divisions span a 28-point graduation rate gap. Grayson County and Clarke County graduate nearly 100% of students, while Richmond City and Danville graduate fewer than 75%.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">div_grad</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span>, <span class="va">end_year</span> <span class="op">==</span> <span class="fl">2023</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">division_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    grad_rate <span class="op">=</span> <span class="va">graduates</span> <span class="op">/</span> <span class="va">cohort</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">cohort</span> <span class="op">&gt;=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Top 5 divisions:\n"</span><span class="op">)</span></span>
+<span><span class="va">div_grad</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">grad_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Top 5 divisions:</span></span>
+<span><span class="co">#&gt; # A tibble: 5 x 5</span></span>
+<span><span class="co">#&gt;   division_name    cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;             &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 Grayson County      116       116     1         100</span></span>
+<span><span class="co">#&gt; 2 Clarke County       146       145     0.993      99.3</span></span>
+<span><span class="co">#&gt; 3 Falls Church City   200       197     0.985      98.5</span></span>
+<span><span class="co">#&gt; 4 Wise County         405       398     0.983      98.3</span></span>
+<span><span class="co">#&gt; 5 Essex County        105       103     0.981      98.1</span></span></code></pre>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nBottom 5 divisions:\n"</span><span class="op">)</span></span>
+<span><span class="va">div_grad</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">grad_rate</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>grad_pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">grad_rate</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Bottom 5 divisions:</span></span>
+<span><span class="co">#&gt; # A tibble: 5 x 5</span></span>
+<span><span class="co">#&gt;   division_name        cohort graduates grad_rate grad_pct</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                 &lt;int&gt;     &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 Richmond City          1483      1073     0.724     72.4</span></span>
+<span><span class="co">#&gt; 2 Danville City           393       288     0.733     73.3</span></span>
+<span><span class="co">#&gt; 3 Prince Edward County    157       126     0.803     80.3</span></span>
+<span><span class="co">#&gt; 4 Fredericksburg City     270       219     0.811     81.1</span></span>
+<span><span class="co">#&gt; 5 Norfolk City           1800      1475     0.819     81.9</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/division-gap-chart-1.png" alt="Division graduation rate extremes"><div class="figcaption">Division graduation rate extremes</div>
+</div>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="id_15-five-years-490000-graduates">15. Five years, 490,000 graduates<a class="anchor" aria-label="anchor" href="#id_15-five-years-490000-graduates"></a>
+</h3>
+<p>From 2019 to 2023, Virginia graduated 452,834 students across five cohorts totaling 490,872 seniors. The state maintains roughly 320 high schools.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">summary_stats</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<span>    years <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    total_cohort <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cohort_size</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    total_graduates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">total_graduates</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    total_dropouts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">dropouts</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    avg_grad_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">graduation_rate</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">summary_stats</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 1 x 5</span></span>
+<span><span class="co">#&gt;   years total_cohort total_graduates total_dropouts avg_grad_rate</span></span>
+<span><span class="co">#&gt;   &lt;int&gt;        &lt;int&gt;           &lt;int&gt;          &lt;int&gt;         &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     5       490872          451834          24927          92.2</span></span></code></pre>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">school_counts</span> <span class="op">&lt;-</span> <span class="va">all_grad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">end_year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>n_schools <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/n_distinct.html" class="external-link">n_distinct</a></span><span class="op">(</span><span class="va">school_name</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">school_counts</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; # A tibble: 5 x 2</span></span>
+<span><span class="co">#&gt;   end_year n_schools</span></span>
+<span><span class="co">#&gt;      &lt;int&gt;     &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1     2019       316</span></span>
+<span><span class="co">#&gt; 2     2020       318</span></span>
+<span><span class="co">#&gt; 3     2021       317</span></span>
+<span><span class="co">#&gt; 4     2022       316</span></span>
+<span><span class="co">#&gt; 5     2023       320</span></span></code></pre>
+<div class="float">
+<img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/five-year-summary-chart-1.png" alt="Cohort size vs graduates"><div class="figcaption">Cohort size vs graduates</div>
 </div>
 <hr>
 </div>
@@ -332,79 +593,69 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"almartin82/vaschooldata"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="r-quick-start">R Quick Start<a class="anchor" aria-label="anchor" href="#r-quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/vaschooldata">vaschooldata</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Get 2023 enrollment data (2022-23 school year)</span></span>
-<span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Statewide total</span></span>
-<span><span class="va">enr</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Top 5 divisions</span></span>
-<span><span class="va">enr</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="python-quick-start">Python Quick Start<a class="anchor" aria-label="anchor" href="#python-quick-start"></a>
-</h2>
-<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="im">import</span> pyvaschooldata <span class="im">as</span> va</span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a></span>
-<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a><span class="co"># Fetch 2023 data (2022-23 school year)</span></span>
-<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>enr <span class="op">=</span> va.fetch_enr(<span class="dv">2023</span>)</span>
-<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a><span class="co"># Statewide total</span></span>
-<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a>total <span class="op">=</span> enr[(enr[<span class="st">'is_state'</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (enr[<span class="st">'subgroup'</span>] <span class="op">==</span> <span class="st">'total_enrollment'</span>) <span class="op">&amp;</span> (enr[<span class="st">'grade_level'</span>] <span class="op">==</span> <span class="st">'TOTAL'</span>)][<span class="st">'n_students'</span>].<span class="bu">sum</span>()</span>
-<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>total<span class="sc">:,}</span><span class="ss"> students"</span>)</span>
-<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" tabindex="-1"></a><span class="co"># Get multiple years</span></span>
-<span id="cb24-11"><a href="#cb24-11" tabindex="-1"></a>enr_multi <span class="op">=</span> va.fetch_enr_multi([<span class="dv">2020</span>, <span class="dv">2021</span>, <span class="dv">2022</span>, <span class="dv">2023</span>])</span>
-<span id="cb24-12"><a href="#cb24-12" tabindex="-1"></a></span>
-<span id="cb24-13"><a href="#cb24-13" tabindex="-1"></a><span class="co"># Check available years</span></span>
-<span id="cb24-14"><a href="#cb24-14" tabindex="-1"></a>years <span class="op">=</span> va.get_available_years()</span>
-<span id="cb24-15"><a href="#cb24-15" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data available: </span><span class="sc">{</span><span class="bu">min</span>(years)<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span><span class="bu">max</span>(years)<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="graduation-rate-data">Graduation Rate Data<a class="anchor" aria-label="anchor" href="#graduation-rate-data"></a>
-</h2>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/vaschooldata">vaschooldata</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Get 2023 graduation rates (2022-23 school year)</span></span>
-<span><span class="va">grad</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_graduation.html">fetch_graduation</a></span><span class="op">(</span><span class="fl">2023</span><span class="op">)</span></span>
+<span><span class="co"># Get 2023 graduation rates</span></span>
+<span><span class="va">grad</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_graduation.html">fetch_graduation</a></span><span class="op">(</span><span class="fl">2023</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Statewide graduation rate</span></span>
 <span><span class="va">grad</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Compare schools</span></span>
+<span><span class="co"># Top 5 schools by cohort</span></span>
 <span><span class="va">grad</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_school</span>, <span class="va">diploma_type</span> <span class="op">==</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">graduation_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Years available:</strong> 2019-2023 (5 years) <strong>Data source:</strong> VDOE Cohort Graduation and Dropout Report <strong>Rate types:</strong> 4-year, 5-year graduation rates <strong>Diploma types:</strong> Advanced Studies, Standard, IB, GED, Certificate, Applied Studies</p>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">cohort_size</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Enrollment data (9 years: 2016-2024)</span></span>
+<span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Available years</span></span>
+<span><span class="fu"><a href="reference/get_available_years.html">get_available_years</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Enrollment: 2016-2024</span></span>
+<span><span class="fu"><a href="reference/get_available_grad_years.html">get_available_grad_years</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Graduation: 2019-2023</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="python-quick-start">Python Quick Start<a class="anchor" aria-label="anchor" href="#python-quick-start"></a>
+</h2>
+<div class="sourceCode" id="cb39"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="im">import</span> pyvaschooldata <span class="im">as</span> va</span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a><span class="co"># Fetch 2023 graduation data</span></span>
+<span id="cb39-4"><a href="#cb39-4" tabindex="-1"></a>grad <span class="op">=</span> va.fetch_graduation(<span class="dv">2023</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" tabindex="-1"></a><span class="co"># Statewide rate</span></span>
+<span id="cb39-7"><a href="#cb39-7" tabindex="-1"></a>state <span class="op">=</span> grad[(grad[<span class="st">'is_state'</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (grad[<span class="st">'diploma_type'</span>] <span class="op">==</span> <span class="st">'all'</span>)]</span>
+<span id="cb39-8"><a href="#cb39-8" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Graduation rate: </span><span class="sc">{</span>state[<span class="st">'graduation_rate'</span>]<span class="sc">.</span>values[<span class="dv">0</span>]<span class="sc">:.1%}</span><span class="ss">"</span>)</span>
+<span id="cb39-9"><a href="#cb39-9" tabindex="-1"></a></span>
+<span id="cb39-10"><a href="#cb39-10" tabindex="-1"></a><span class="co"># Fetch enrollment data</span></span>
+<span id="cb39-11"><a href="#cb39-11" tabindex="-1"></a>enr <span class="op">=</span> va.fetch_enr(<span class="dv">2024</span>)</span>
+<span id="cb39-12"><a href="#cb39-12" tabindex="-1"></a></span>
+<span id="cb39-13"><a href="#cb39-13" tabindex="-1"></a><span class="co"># Check available years</span></span>
+<span id="cb39-14"><a href="#cb39-14" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Enrollment years: </span><span class="sc">{</span>va<span class="sc">.</span>get_available_years()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb39-15"><a href="#cb39-15" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Graduation years: </span><span class="sc">{</span>va<span class="sc">.</span>get_available_grad_years()<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="data-format">Data Format<a class="anchor" aria-label="anchor" href="#data-format"></a>
 </h2>
-<p><code><a href="reference/fetch_enr.html">fetch_enr()</a></code> returns tidy (long) format by default:</p>
+<div class="section level3">
+<h3 id="enrollment-fetch_enr">Enrollment (<code>fetch_enr()</code>)<a class="anchor" aria-label="anchor" href="#enrollment-fetch_enr"></a>
+</h3>
 <table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
 <thead><tr class="header">
 <th>Column</th>
 <th>Description</th>
@@ -412,37 +663,29 @@
 <tbody>
 <tr class="odd">
 <td><code>end_year</code></td>
-<td>School year end (e.g., 2023 for 2022-23)</td>
+<td>School year end (e.g., 2024 for 2023-24)</td>
 </tr>
 <tr class="even">
 <td><code>district_id</code></td>
-<td>LEA ID (7 characters)</td>
+<td>Division ID</td>
 </tr>
 <tr class="odd">
 <td><code>campus_id</code></td>
-<td>School ID (12 characters)</td>
+<td>School ID</td>
 </tr>
 <tr class="even">
-<td><code>type</code></td>
-<td>“State”, “District”, or “Campus”</td>
-</tr>
-<tr class="odd">
 <td>
 <code>district_name</code>, <code>campus_name</code>
 </td>
 <td>Names</td>
 </tr>
-<tr class="even">
-<td><code>county</code></td>
-<td>County name</td>
-</tr>
 <tr class="odd">
 <td><code>grade_level</code></td>
-<td>“TOTAL”, “PK”, “K”, “01”…“12”</td>
+<td>PK, K, 01-12, UG, TOTAL</td>
 </tr>
 <tr class="even">
 <td><code>subgroup</code></td>
-<td>Demographic group</td>
+<td>Demographic group (total_enrollment, white, black, hispanic, asian, etc.)</td>
 </tr>
 <tr class="odd">
 <td><code>n_students</code></td>
@@ -452,25 +695,85 @@
 <td><code>pct</code></td>
 <td>Percentage of total</td>
 </tr>
+<tr class="odd">
+<td>
+<code>is_state</code>, <code>is_district</code>, <code>is_campus</code>, <code>is_charter</code>
+</td>
+<td>Entity flags</td>
+</tr>
 </tbody>
 </table>
+</div>
+<div class="section level3">
+<h3 id="graduation-fetch_graduation">Graduation (<code>fetch_graduation()</code>)<a class="anchor" aria-label="anchor" href="#graduation-fetch_graduation"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
+<thead><tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>end_year</code></td>
+<td>Cohort year</td>
+</tr>
+<tr class="even">
+<td>
+<code>division_name</code>, <code>school_name</code>
+</td>
+<td>Names</td>
+</tr>
+<tr class="odd">
+<td><code>graduation_rate</code></td>
+<td>4-year cohort graduation rate</td>
+</tr>
+<tr class="even">
+<td><code>cohort_size</code></td>
+<td>Number of students in cohort</td>
+</tr>
+<tr class="odd">
+<td><code>total_graduates</code></td>
+<td>Number who graduated</td>
+</tr>
+<tr class="even">
+<td><code>dropout_rate</code></td>
+<td>Cohort dropout rate</td>
+</tr>
+<tr class="odd">
+<td><code>diploma_type</code></td>
+<td>advanced_studies, standard, ib, applied_studies, ged, isaep, certificate, all</td>
+</tr>
+<tr class="even">
+<td><code>diploma_count</code></td>
+<td>Count for each diploma type</td>
+</tr>
+<tr class="odd">
+<td>
+<code>is_state</code>, <code>is_school</code>
+</td>
+<td>Entity flags</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="section level2">
 <h2 id="data-notes">Data Notes<a class="anchor" aria-label="anchor" href="#data-notes"></a>
 </h2>
-<p><strong>Data source:</strong> Virginia Department of Education (VDOE) School Quality Profiles</p>
-<p><strong>Available years:</strong> 2016-2024 (9 years)</p>
-<p><strong>Entities:</strong> State, 132 school divisions, ~2,100 schools</p>
-<p><strong>Subgroups:</strong> Total enrollment, race/ethnicity (white, black, Hispanic, Asian, multiracial, Native American, Pacific Islander), gender, economically disadvantaged, students with disabilities, English learners</p>
-<p><strong>Suppression:</strong> Small counts may be suppressed for student privacy</p>
-<p><strong>Census Day:</strong> Fall membership count (typically late September/early October)</p>
-</div>
-<div class="section level2">
-<h2 id="enrollment-visualizations">Enrollment Visualizations<a class="anchor" aria-label="anchor" href="#enrollment-visualizations"></a>
-</h2>
-<p><img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/loudoun-chart-1.png" alt="Virginia statewide enrollment trends" width="600"></p>
-<p><img src="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks_files/figure-html/top-districts-chart-1.png" alt="Top Virginia districts" width="600"></p>
-<p>See the <a href="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks.html">full vignette</a> for all 15 insights with interactive charts.</p>
+<p><strong>Enrollment data source</strong>: Virginia Department of Education (VDOE) School Quality Profiles</p>
+<p><strong>Graduation data source</strong>: VDOE Open Data Portal (Cohort Graduation and Dropout Report)</p>
+<p><strong>Available years</strong>: Enrollment 2016-2024 (9 years); Graduation 2019-2023 (5 years)</p>
+<p><strong>Entities</strong>: State, 132 school divisions (Virginia’s term for districts), ~2,100 schools (enrollment), ~320 high schools (graduation)</p>
+<p><strong>Enrollment subgroups</strong>: Total enrollment, race/ethnicity (white, black, Hispanic, Asian, multiracial, Native American, Pacific Islander), gender</p>
+<p><strong>Graduation data</strong>: 4-year cohort graduation rate, dropout rate, completion rate, diploma types (Advanced Studies, Standard, IB, Applied Studies, GED, ISAEP, Certificate)</p>
+<p><strong>Suppression</strong>: Small counts suppressed for student privacy (marked as <code>&lt;</code> in raw data, <code>NA</code> in processed data)</p>
+<p><strong>Census Day</strong>: Fall membership count (typically late September/early October)</p>
+<p><strong>CAPTCHA note</strong>: VDOE’s School Quality Profiles site occasionally requires CAPTCHA verification for enrollment data downloads. When this happens, use <code>use_cache = TRUE</code> (default) to rely on locally cached data. If no cache exists, download files manually from the <a href="https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics" class="external-link">VDOE enrollment page</a> and use <code><a href="reference/fetch_enr_local.html">fetch_enr_local()</a></code> to import them. Graduation data is always available via the VDOE Open Data Portal.</p>
+<p>See the <a href="https://almartin82.github.io/vaschooldata/articles/enrollment_hooks.html">full vignette</a> for all 15 stories with charts.</p>
 </div>
 <div class="section level2">
 <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a>
