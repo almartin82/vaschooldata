@@ -11,7 +11,7 @@ theme_set(theme_minimal(base_size = 14))
 
 Virginia educates nearly **1.25 million students** across 132 school
 divisions and graduates over **90,000 seniors** each year. This package
-provides 9 years of enrollment data (2016-2024) and 5 years of
+provides 10 years of enrollment data (2016-2025) and 5 years of
 graduation data (2019-2023) directly from the Virginia Department of
 Education. Here are fifteen stories hiding in the data.
 
@@ -866,7 +866,7 @@ School Quality Profiles
 **Graduation data source**: VDOE Open Data Portal (Cohort Graduation and
 Dropout Report)
 
-**Available years**: Enrollment 2016-2024 (9 years); Graduation
+**Available years**: Enrollment 2016-2025 (10 years); Graduation
 2019-2023 (5 years)
 
 **Entities**: State, 132 school divisions (Virginia’s term for
@@ -922,21 +922,21 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] ggplot2_4.0.2      tidyr_1.3.2        dplyr_1.2.0        vaschooldata_0.1.0
+#> [1] ggplot2_4.0.2      tidyr_1.3.2        dplyr_1.2.0        vaschooldata_0.1.1
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] utf8_1.2.6         rappdirs_0.3.4     sass_0.4.10        generics_0.1.4    
 #>  [5] stringi_1.8.7      hms_1.1.4          digest_0.6.39      magrittr_2.0.4    
 #>  [9] evaluate_1.0.5     grid_4.5.2         RColorBrewer_1.1-3 fastmap_1.2.0     
 #> [13] jsonlite_2.0.0     httr_1.4.8         purrr_1.2.1        scales_1.4.0      
-#> [17] codetools_0.2-20   textshaping_1.0.4  jquerylib_0.1.4    cli_3.6.5         
+#> [17] codetools_0.2-20   textshaping_1.0.5  jquerylib_0.1.4    cli_3.6.5         
 #> [21] rlang_1.1.7        crayon_1.5.3       bit64_4.6.0-1      withr_3.0.2       
 #> [25] cachem_1.1.0       yaml_2.3.12        tools_4.5.2        parallel_4.5.2    
 #> [29] tzdb_0.5.0         forcats_1.0.1      curl_7.0.0         vctrs_0.7.1       
-#> [33] R6_2.6.1           lifecycle_1.0.5    stringr_1.6.0      fs_1.6.6          
-#> [37] bit_4.6.0          vroom_1.7.0        ragg_1.5.0         pkgconfig_2.0.3   
+#> [33] R6_2.6.1           lifecycle_1.0.5    stringr_1.6.0      fs_1.6.7          
+#> [37] bit_4.6.0          vroom_1.7.0        ragg_1.5.1         pkgconfig_2.0.3   
 #> [41] desc_1.4.3         pkgdown_2.2.0      pillar_1.11.1      bslib_0.10.0      
-#> [45] gtable_0.3.6       glue_1.8.0         systemfonts_1.3.1  xfun_0.56         
+#> [45] gtable_0.3.6       glue_1.8.0         systemfonts_1.3.2  xfun_0.56         
 #> [49] tibble_3.3.1       tidyselect_1.2.1   knitr_1.51         farver_2.1.2      
 #> [53] htmltools_0.5.9    rmarkdown_2.30     labeling_0.4.3     readr_2.2.0       
 #> [57] compiler_4.5.2     S7_0.2.1

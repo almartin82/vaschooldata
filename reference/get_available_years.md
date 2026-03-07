@@ -11,7 +11,7 @@ get_available_years()
 
 ## Value
 
-Integer vector of available years (2016-2024)
+Integer vector of available years (2016-2025)
 
 ## Details
 
@@ -27,9 +27,9 @@ winter following the school year start. For example, 2024-25
 
 ``` r
 get_available_years()
-#> [1] 2016 2017 2018 2019 2020 2021 2022 2023 2024
+#>  [1] 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025
 
 # Check the current range
 range(get_available_years())
-#> [1] 2016 2024
+#> [1] 2016 2025
 ```

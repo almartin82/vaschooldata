@@ -64,7 +64,7 @@ Institute, etc.).
 
 ## Data Availability
 
-- Years: 2016-2024 (9 years from VDOE School Quality Profiles)
+- Years: 2016-2025 (10 years from VDOE School Quality Profiles)
 
 - Aggregation levels: State, Division (District), School
 

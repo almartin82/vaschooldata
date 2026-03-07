@@ -2,7 +2,7 @@
 
 Virginia educates nearly **1.25 million students** across 132 school
 divisions and graduates over **90,000 seniors** each year. This package
-provides 9 years of enrollment data and 5 years of graduation data
+provides 10 years of enrollment data and 5 years of graduation data
 directly from the Virginia Department of Education.
 
 Part of the [njschooldata](https://github.com/almartin82/njschooldata)
@@ -167,7 +167,7 @@ Division graduation rate extremes
 
 | Category           | Years     | Function                                                                                                                                                                                                      | Details                                           |
 |--------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| **Enrollment**     | 2016-2024 | [`fetch_enr()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr.md) / [`fetch_enr_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_multi.md)                             | State, division, school. Race, gender             |
+| **Enrollment**     | 2016-2025 | [`fetch_enr()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr.md) / [`fetch_enr_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_enr_multi.md)                             | State, division, school. Race, gender             |
 | Assessments        | –         | –                                                                                                                                                                                                             | Not yet available                                 |
 | **Graduation**     | 2019-2023 | [`fetch_graduation()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation.md) / [`fetch_graduation_multi()`](https://almartin82.github.io/vaschooldata/reference/fetch_graduation_multi.md) | State, school. Diploma types, dropout rate        |
 | **Directory**      | current   | [`fetch_directory()`](https://almartin82.github.io/vaschooldata/reference/fetch_directory.md)                                                                                                                 | School names, addresses, principals, grade levels |
@@ -209,11 +209,11 @@ grad |>
   select(school_name, division_name, graduation_rate, cohort_size) |>
   head(5)
 
-# Enrollment data (9 years: 2016-2024)
+# Enrollment data (10 years: 2016-2025)
 enr <- fetch_enr(2024, use_cache = TRUE)
 
 # Available years
-get_available_years()       # Enrollment: 2016-2024
+get_available_years()       # Enrollment: 2016-2025
 get_available_grad_years()  # Graduation: 2019-2023
 ```
 
@@ -255,7 +255,7 @@ Profiles](https://www.doe.virginia.gov/data-policy-funding/data-reports/statisti
 Portal](https://data.virginia.gov) (Cohort Graduation and Dropout
 Report)
 
-**Available years**: Enrollment 2016-2024 (9 years); Graduation
+**Available years**: Enrollment 2016-2025 (10 years); Graduation
 2019-2023 (5 years)
 
 **Entities**: State, 132 school divisions (Virginia’s term for

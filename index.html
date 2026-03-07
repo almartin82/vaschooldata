@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">vaschooldata</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>Virginia educates nearly <strong>1.25 million students</strong> across 132 school divisions and graduates over <strong>90,000 seniors</strong> each year. This package provides 9 years of enrollment data and 5 years of graduation data directly from the Virginia Department of Education.</p>
+<p>Virginia educates nearly <strong>1.25 million students</strong> across 132 school divisions and graduates over <strong>90,000 seniors</strong> each year. This package provides 10 years of enrollment data and 5 years of graduation data directly from the Virginia Department of Education.</p>
 <p>Part of the <a href="https://github.com/almartin82/njschooldata" class="external-link">njschooldata</a> family.</p>
 <p><strong><a href="https://almartin82.github.io/vaschooldata/">Full documentation</a></strong> – all 15 stories with interactive charts, getting-started guide, and complete function reference.</p>
 <div class="section level2">
@@ -204,7 +204,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>Enrollment</strong></td>
-<td>2016-2024</td>
+<td>2016-2025</td>
 <td>
 <code><a href="reference/fetch_enr.html">fetch_enr()</a></code> / <code><a href="reference/fetch_enr_multi.html">fetch_enr_multi()</a></code>
 </td>
@@ -294,11 +294,11 @@
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">school_name</span>, <span class="va">division_name</span>, <span class="va">graduation_rate</span>, <span class="va">cohort_size</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Enrollment data (9 years: 2016-2024)</span></span>
+<span><span class="co"># Enrollment data (10 years: 2016-2025)</span></span>
 <span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Available years</span></span>
-<span><span class="fu"><a href="reference/get_available_years.html">get_available_years</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Enrollment: 2016-2024</span></span>
+<span><span class="fu"><a href="reference/get_available_years.html">get_available_years</a></span><span class="op">(</span><span class="op">)</span>       <span class="co"># Enrollment: 2016-2025</span></span>
 <span><span class="fu"><a href="reference/get_available_grad_years.html">get_available_grad_years</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Graduation: 2019-2023</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -331,7 +331,7 @@
 </h2>
 <p><strong>Enrollment data source</strong>: <a href="https://www.doe.virginia.gov/data-policy-funding/data-reports/statistics-reports/enrollment-demographics" class="external-link">Virginia Department of Education (VDOE) School Quality Profiles</a></p>
 <p><strong>Graduation data source</strong>: <a href="https://data.virginia.gov" class="external-link">VDOE Open Data Portal</a> (Cohort Graduation and Dropout Report)</p>
-<p><strong>Available years</strong>: Enrollment 2016-2024 (9 years); Graduation 2019-2023 (5 years)</p>
+<p><strong>Available years</strong>: Enrollment 2016-2025 (10 years); Graduation 2019-2023 (5 years)</p>
 <p><strong>Entities</strong>: State, 132 school divisions (Virginia’s term for districts), ~2,100 schools (enrollment), ~320 high schools (graduation)</p>
 <p><strong>Enrollment subgroups</strong>: Total enrollment, race/ethnicity (white, black, Hispanic, Asian, multiracial, Native American, Pacific Islander), gender</p>
 <p><strong>Graduation data</strong>: 4-year cohort graduation rate, dropout rate, completion rate, diploma types (Advanced Studies, Standard, IB, Applied Studies, GED, ISAEP, Certificate)</p>
@@ -770,7 +770,8 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Al Martin <br><small class="roles"> Author, maintainer </small>   </li>
+<li>
+<a href="https://github.com/almartin82" class="external-link">Andy Martin</a> <br><small class="roles"> Author, maintainer </small>   </li>
 </ul>
 </div>
 
@@ -789,7 +790,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Al Martin.</p>
+  <p>Developed by <a href="https://github.com/almartin82" class="external-link">Andy Martin</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
