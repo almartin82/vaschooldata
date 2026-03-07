@@ -2,7 +2,7 @@
 # Enrollment Year Coverage Tests for vaschooldata
 # ==============================================================================
 #
-# Per-year tests across all available enrollment years (2016-2024).
+# Per-year tests across all available enrollment years (2016-2025).
 # Verifies state totals, Fairfax County (largest division), subgroup/grade
 # completeness, and entity flags for each year.
 #
@@ -153,6 +153,20 @@ test_that("2024 state total enrollment is in valid range", {
   skip_if_enr_unavailable()
 
   enr <- fetch_enr(2024, tidy = TRUE, use_cache = TRUE)
+  state <- enr |>
+    dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL")
+
+  expect_equal(nrow(state), 1)
+  expect_true(state$n_students >= 1100000 & state$n_students <= 1400000,
+    info = paste("State total:", state$n_students))
+})
+
+test_that("2025 state total enrollment is in valid range", {
+  skip_on_cran()
+  skip_if_offline()
+  skip_if_enr_unavailable()
+
+  enr <- fetch_enr(2025, tidy = TRUE, use_cache = TRUE)
   state <- enr |>
     dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL")
 

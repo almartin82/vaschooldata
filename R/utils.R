@@ -24,7 +24,7 @@ NULL
 #' following the school year start. For example, 2024-25 (end_year=2025) data
 #' is usually available by December 2024.
 #'
-#' @return Integer vector of available years (2016-2024)
+#' @return Integer vector of available years (2016-2025)
 #' @export
 #' @examples
 #' get_available_years()
@@ -33,9 +33,9 @@ NULL
 #' range(get_available_years())
 get_available_years <- function() {
   # VDOE School Quality Profiles data available from 2016
-  # Years reflect end of school year (2024 = 2023-24 school year)
+  # Years reflect end of school year (2025 = 2024-25 school year)
   # Maximum year updated when new data is released
-  2016L:2024L
+  2016L:2025L
 }
 
 

@@ -513,7 +513,7 @@ test_that("fetch_enr rejects years outside valid range", {
   expect_error(fetch_enr(1900), "end_year must be between")
   expect_error(fetch_enr(2030), "end_year must be between")
   expect_error(fetch_enr(2015), "end_year must be between")
-  expect_error(fetch_enr(2025), "end_year must be between")
+  expect_error(fetch_enr(2026), "end_year must be between")
 })
 
 test_that("fetch_graduation rejects years outside valid range", {
