@@ -34,7 +34,7 @@ library(ggplot2)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-Virginia educates nearly **1.25 million students** across 132 school divisions and graduates over **90,000 seniors** each year. This package provides 9 years of enrollment data (2016-2024) and 5 years of graduation data (2019-2023) directly from the Virginia Department of Education. Here are fifteen stories hiding in the data.
+Virginia educates nearly **1.25 million students** across 132 school divisions and graduates over **90,000 seniors** each year. This package provides 10 years of enrollment data (2016-2025) and 5 years of graduation data (2019-2023) directly from the Virginia Department of Education. Here are fifteen stories hiding in the data.
 
 ---
 
@@ -661,7 +661,7 @@ Virginia's graduation data reveals:
 
 **Graduation data source**: VDOE Open Data Portal (Cohort Graduation and Dropout Report)
 
-**Available years**: Enrollment 2016-2024 (9 years); Graduation 2019-2023 (5 years)
+**Available years**: Enrollment 2016-2025 (10 years); Graduation 2019-2023 (5 years)
 
 **Entities**: State, 132 school divisions (Virginia's term for districts), ~2,100 schools (enrollment), ~320 high schools (graduation)
 

@@ -29,8 +29,8 @@ test_that("get_available_years returns expected range", {
 
   expect_true(is.integer(years))
   expect_equal(min(years), 2016L)
-  expect_equal(max(years), 2024L)
-  expect_true(length(years) == 9)  # 2016-2024 inclusive
+  expect_equal(max(years), 2025L)
+  expect_true(length(years) == 10)  # 2016-2025 inclusive
 })
 
 test_that("get_va_fips returns Virginia FIPS code", {

@@ -40,7 +40,7 @@
 #'
 #' @section Data Availability:
 #' \itemize{
-#'   \item Years: 2016-2024 (9 years from VDOE School Quality Profiles)
+#'   \item Years: 2016-2025 (10 years from VDOE School Quality Profiles)
 #'   \item Aggregation levels: State, Division (District), School
 #'   \item Demographics: Race/ethnicity (7 categories), Sex, Economically Disadvantaged, etc.
 #'   \item Grade levels: PK through 12, plus ungraded and TOTAL

@@ -14,7 +14,7 @@
 #
 # Virginia has 132 school divisions and approximately 2,100 schools.
 #
-# Data availability: 2016-present (approx. 9 years of historical data)
+# Data availability: 2016-present (approx. 10 years of historical data)
 #
 # ==============================================================================
 
@@ -210,6 +210,7 @@ get_vdoe_doc_id <- function(end_year, level) {
   # This lookup table maps years and levels to document IDs
   # These would need to be updated when new data is released
   doc_ids <- list(
+    "2026" = list(school = NA, division = NA),
     "2025" = list(school = NA, division = NA),
     "2024" = list(school = NA, division = NA),
     "2023" = list(school = NA, division = NA),

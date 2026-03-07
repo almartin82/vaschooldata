@@ -953,11 +953,11 @@ test_that("get_available_years returns integer vector", {
   expect_true(is.integer(years))
 })
 
-test_that("get_available_years range is 2016-2024", {
+test_that("get_available_years range is 2016-2025", {
   years <- get_available_years()
   expect_equal(min(years), 2016L)
-  expect_equal(max(years), 2024L)
-  expect_equal(length(years), 9L)
+  expect_equal(max(years), 2025L)
+  expect_equal(length(years), 10L)
 })
 
 test_that("format_school_year produces correct format", {
